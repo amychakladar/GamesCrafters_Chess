@@ -14,7 +14,7 @@ struct tb_handle {
   int num_tables;
   int wdl;
   int split;
-  uint8_t perm[8][TBPIECES];
+//   uint8_t perm[8][TBPIECES];
   int default_blocksize;
   int blocksize[8];
   int idxbits[8];
