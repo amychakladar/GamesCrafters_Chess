@@ -3,6 +3,7 @@
 
   This file is distributed under the terms of the GNU GPL, version 2.
 */
+#include <cstdint>
 
 #define REDUCE_PLY 122
 #define REDUCE_PLY_RED 119

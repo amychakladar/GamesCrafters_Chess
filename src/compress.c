@@ -19,6 +19,7 @@
 #include "threads.h"
 #include "types.h"
 #include "util.h"
+#include <cstdint>
 
 #define MAX_NEW 250
 
