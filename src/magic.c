@@ -2,6 +2,10 @@
   Copyright (c) 2011-2013 Ronald de Man
 
   This file is distributed under the terms of the GNU GPL, version 2.
+
+  3-17-23 amy update - editing init_magics() so that it keeps track of used squares for each
+  occupency pattern so we cna modify the pattern + calculate corresponding attack set w/o impacting
+  original function.
 */
 
 /* to be included in board.c */
@@ -197,14 +201,18 @@ static void init_magics(struct MagicInit *magic_init, struct Magic *magic,
     // and calculate the corresponding attack sets
     for (i = 0; i < (1 << num); i++) {
       bb = 0;
-      for (j = 0; j < num; j++)
-        if (i & (1 << j))
+      bitboard used = 0;
+      for (j = 0; j < num; j++) {
+        if (i & (1 << j)) {
           bb |= bit[squares[j]];
+          used |= bit[squares[j]];
+        }
+      }
       bb2 = 0;
       for (j = 0; j < 4; j++) {
         for (d = 1; !((sq88 + d * dir[j][1]) & 0x88); d++) {
           bb2 |= bit[sq + d * dir[j][0]];
-          if (bb & bit[sq + d * dir[j][0]]) break;
+          if (used & bit[sq + d * dir[j][0]]) break;
         }
       }
       j = (bb * magic[sq].magic) >> shift;
