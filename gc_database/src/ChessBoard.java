@@ -1,3 +1,4 @@
+
 public class ChessBoard {
 
     private final Square[] square = new Square[120];
@@ -359,7 +360,7 @@ public class ChessBoard {
         return false;
     }
 
-    public boolean IsAttackedRay(int source, int dir, Square piece1, Square piece2) {
+    public boolean isAttackedRay(int source, int dir, Square piece1, Square piece2) {
         int dest;
         for (dest = source + dir; square[dest] == Empty; dest += dir) {
             // do nothing
@@ -368,9 +369,8 @@ public class ChessBoard {
         return square[dest] == piece1 || square[dest] == piece2;
     }
 
-    public boolean IsLegalPosition() {
-        // Can't move if you're in check!
-        return isWhiteTurn ? !IsAttackedByWhite(bkpos) : !IsAttackedByBlack(wkpos);
+    public boolean isLegalPosition() {
+        return isWhiteTurn ? !isAttackedByWhite(bkpos) : !isAttackedByBlack(wkpos);
     }
 
 }
