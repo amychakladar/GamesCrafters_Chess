@@ -14,7 +14,7 @@ chess::chessDb chessDb;
 std::string explainScore(int score);
 
 int main() {
-    std::cout << "Welcome to NhatMinh Chess Endgame databases - version: " << chess::getVersion() << std::endl;
+    std::cout << "Welcome to GamesCrafters Chess Endgame databases - version: " << chess::getVersion() << std::endl;
 
     /*
      * Allow chess to print out more information
