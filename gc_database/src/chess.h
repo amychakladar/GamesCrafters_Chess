@@ -1,29 +1,5 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
-
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#ifndef Egtb_h
-#define Egtb_h
+#ifndef chess_h
+#define chess_h
 
 
 #include <iostream>
@@ -33,89 +9,89 @@
 #include <vector>
 #include <assert.h>
 
-namespace egtb {
+namespace chess {
 
-    const int EGTB_VERSION = 0x001;
+    const int CHESS_VERSION = 0x001;
 
     enum {
-        EGTB_IDX_K_8,
-        EGTB_IDX_K_2,
-        EGTB_IDX_K,
-        EGTB_IDX_KK_8,
-        EGTB_IDX_KK_2,
+        chess_IDX_K_8,
+        chess_IDX_K_2,
+        chess_IDX_K,
+        chess_IDX_KK_8,
+        chess_IDX_KK_2,
 
-        EGTB_IDX_Q = 16,
-        EGTB_IDX_R,
-        EGTB_IDX_B,
-        EGTB_IDX_H,
-        EGTB_IDX_P,
+        chess_IDX_Q = 16,
+        chess_IDX_R,
+        chess_IDX_B,
+        chess_IDX_H,
+        chess_IDX_P,
 
-        EGTB_IDX_QQ,
-        EGTB_IDX_RR,
-        EGTB_IDX_BB,
-        EGTB_IDX_HH,
-        EGTB_IDX_PP,
+        chess_IDX_QQ,
+        chess_IDX_RR,
+        chess_IDX_BB,
+        chess_IDX_HH,
+        chess_IDX_PP,
 
-        EGTB_IDX_QQQ,
-        EGTB_IDX_RRR,
-        EGTB_IDX_BBB,
-        EGTB_IDX_HHH,
-        EGTB_IDX_PPP,
+        chess_IDX_QQQ,
+        chess_IDX_RRR,
+        chess_IDX_BBB,
+        chess_IDX_HHH,
+        chess_IDX_PPP,
 
-        EGTB_IDX_QQQQ,
-        EGTB_IDX_RRRR,
-        EGTB_IDX_BBBB,
-        EGTB_IDX_HHHH,
-        EGTB_IDX_PPPP,
+        chess_IDX_QQQQ,
+        chess_IDX_RRRR,
+        chess_IDX_BBBB,
+        chess_IDX_HHHH,
+        chess_IDX_PPPP,
 
 
-        EGTB_IDX_LAST = EGTB_IDX_PPPP,
+        chess_IDX_LAST = chess_IDX_PPPP,
 
-        EGTB_IDX_NONE = 254
+        chess_IDX_NONE = 254
     };
 
 
 #define MIN(a, b) (((a) <= (b)) ? (a) : (b))
 #define MAX(a, b) (((a) >= (b)) ? (a) : (b))
 
-#define EGTB_SCORE_DRAW         0
+#define chess_SCORE_DRAW         0
 
-#define EGTB_SCORE_MATE         1000
+#define chess_SCORE_MATE         1000
 
-#define EGTB_SCORE_WINNING      1003
+#define chess_SCORE_WINNING      1003
 
-#define EGTB_SCORE_ILLEGAL      1004
-#define EGTB_SCORE_UNKNOWN      1005
-#define EGTB_SCORE_MISSING      1006
-#define EGTB_SCORE_UNSET        1007
+#define chess_SCORE_ILLEGAL      1004
+#define chess_SCORE_UNKNOWN      1005
+#define chess_SCORE_MISSING      1006
+#define chess_SCORE_UNSET        1007
 
 
     ////////////////////////////////////
-#define EGTB_SIZE_K2            32
-#define EGTB_SIZE_K8            10
-#define EGTB_SIZE_K             64
+#define chess_SIZE_K2            32
+#define chess_SIZE_K8            10
+#define chess_SIZE_K             64
 
-#define EGTB_SIZE_KK8           564
-#define EGTB_SIZE_KK2           1806
+#define chess_SIZE_KK8           564
+#define chess_SIZE_KK2           1806
 
-#define EGTB_SIZE_X             64
-#define EGTB_SIZE_XX            2016
-#define EGTB_SIZE_XXX           41664
-#define EGTB_SIZE_XXXX          635376
+#define chess_SIZE_X             64
+#define chess_SIZE_XX            2016
+#define chess_SIZE_XXX           41664
+#define chess_SIZE_XXXX          635376
 
-#define EGTB_SIZE_P             48
-#define EGTB_SIZE_PP            1128
-#define EGTB_SIZE_PPP           17296
-#define EGTB_SIZE_PPPP          194580
+#define chess_SIZE_P             48
+#define chess_SIZE_PP            1128
+#define chess_SIZE_PPP           17296
+#define chess_SIZE_PPPP          194580
 
 
-#define EGTB_ID_MAIN_V0                 23456
+#define chess_ID_MAIN_V0                 23456
 
-#define EGTB_SIZE_COMPRESS_BLOCK        (4 * 1024)
-#define EGTB_PROP_COMPRESSED            (1 << 2)
-#define EGTB_PROP_SPECIAL_SCORE_RANGE   (1 << 3)
+#define chess_SIZE_COMPRESS_BLOCK        (4 * 1024)
+#define chess_PROP_COMPRESSED            (1 << 2)
+#define chess_PROP_SPECIAL_SCORE_RANGE   (1 << 3)
 
-#define EGTB_HEADER_SIZE                128
+#define chess_HEADER_SIZE                128
 
 #define DARK                            8
 #define LIGHT                           16
@@ -123,9 +99,9 @@ namespace egtb {
 #define B                               0
 #define W                               1
 
-#define EGTB_SMART_MODE_THRESHOLD       10L * 1024 * 1024L
+#define chess_SMART_MODE_THRESHOLD       10L * 1024 * 1024L
 
-    const int EGTB_UNCOMPRESS_BIT       = 1 << 31;
+    const int chess_UNCOMPRESS_BIT       = 1 << 31;
 
     enum class Side {
         black = 0, white = 1, none = 2, offboard = 3
@@ -167,9 +143,7 @@ namespace egtb {
         none, horizontal, vertical, flipVH, flipHV, rotate90, rotate180, rotate270
     };
 
-    /*
-     * The rank and file are actually not full file & rank but only internal bits 9-2=7 & 10-2=8
-     */
+
 #define isPosValid(pos) ((pos)>=0 && (pos)<90)
 
 #define getXSide(side) ((side)==Side::white ? Side::black : Side::white)
@@ -187,18 +161,18 @@ namespace egtb {
 #define Status_incheck      (1<<4)
 #define Status_notincheck   (1<<5)
 
-    enum EgtbMemMode {
+    enum chessMemMode {
         tiny,          // load minimum to memory
         all,            // load all data into memory, no access hard disk after loading
         smart           // depend on data size, load as small or all mode
     };
 
-    enum EgtbLoadMode {
+    enum chessLoadMode {
         loadnow,
         onrequest
     };
 
-    enum EgtbLoadStatus {
+    enum chessLoadStatus {
         none, loaded, error
     };
 
@@ -213,24 +187,24 @@ namespace egtb {
     i64 decompressAllBlocks(int blocksize, int blocknum, u32* blocktable, char *dest, i64 uncompressedlen, const char *src, i64 slen);
 
     // set it to true if you want to print out more messages
-    extern bool egtbVerbose;
+    extern bool chessVerbose;
 
     class Piece;
     class Move;
     class MoveList;
-    class EgtbFile;
-    class EgtbDb;
-    class EgtbBoardCore;
-    class EgtbMailBoard;
-    class EgtbKeyRec;
-    class EgtbKey;
+    class chessFile;
+    class chessDb;
+    class chessBoardCore;
+    class chessMailBoard;
+    class chessKeyRec;
+    class chessKey;
 
-} // namespace egtb
+} // namespace chess
 
-#include "EgtbBoard.h"
-#include "EgtbFile.h"
-#include "EgtbDb.h"
-#include "EgtbKey.h"
+#include "chessBoard.h"
+#include "chessFile.h"
+#include "chessDb.h"
+#include "chessKey.h"
 
 
 #endif

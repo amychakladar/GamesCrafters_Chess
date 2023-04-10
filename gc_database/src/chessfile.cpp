@@ -1,36 +1,12 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
-
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
 #include <fstream>
 #include <iomanip>
 #include <ctime>
 
-#include "Egtb.h"
-#include "EgtbFile.h"
-#include "EgtbKey.h"
+#include "chess.h"
+#include "chessFile.h"
+#include "chessKey.h"
 
-using namespace egtb;
+using namespace chess;
 
 extern int subppp_sizes[7];
 extern int *kk_2, *kk_8;
@@ -53,14 +29,14 @@ extern int *kk_2, *kk_8;
 
 //////////////////////////////////////////////////////////////////////
 
-const char* egtbFileExtensions[] = {
+const char* chessFileExtensions[] = {
     ".mtb", ".zmt", nullptr
 };
 
-bool EgtbFile::knownExtension(const std::string& path) {
+bool chessFile::knownExtension(const std::string& path) {
 
-    for (int i = 0; egtbFileExtensions[i]; i++) {
-        if (path.find(egtbFileExtensions[i]) != std::string::npos) {
+    for (int i = 0; chessFileExtensions[i]; i++) {
+        if (path.find(chessFileExtensions[i]) != std::string::npos) {
             return true;
         }
     }
@@ -70,16 +46,16 @@ bool EgtbFile::knownExtension(const std::string& path) {
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-EgtbFile::EgtbFile() {
+chessFile::chessFile() {
     pBuf[0] = pBuf[1] = pCompressBuf = nullptr;
     compressBlockTables[0] = compressBlockTables[1] = nullptr;
     header = nullptr;
-    memMode = EgtbMemMode::tiny;
-    loadStatus = EgtbLoadStatus::none;
+    memMode = chessMemMode::tiny;
+    loadStatus = chessLoadStatus::none;
     reset();
 }
 
-EgtbFile::~EgtbFile() {
+chessFile::~chessFile() {
     removeBuffers();
     if (header) {
         delete header;
@@ -87,7 +63,7 @@ EgtbFile::~EgtbFile() {
     }
 }
 
-void EgtbFile::reset() {
+void chessFile::reset() {
     if (header != nullptr) {
         header->reset();
     }
@@ -96,7 +72,7 @@ void EgtbFile::reset() {
     startpos[0] = 0; endpos[0] = 0; startpos[1] = 0; endpos[1] = 0;
 };
 
-void EgtbFile::removeBuffers() {
+void chessFile::removeBuffers() {
     if (pCompressBuf) free(pCompressBuf);
     pCompressBuf = nullptr;
 
@@ -113,46 +89,46 @@ void EgtbFile::removeBuffers() {
 
         startpos[i] = endpos[i] = 0;
     }
-    loadStatus = EgtbLoadStatus::none;
+    loadStatus = chessLoadStatus::none;
 }
 
 //////////////////////////////////////////////////////////////////////
-void EgtbFile::merge(EgtbFile& otherEgtbFile)
+void chessFile::merge(chessFile& otherchessFile)
 {
     for(int sd = 0; sd < 2; sd++) {
         Side side = static_cast<Side>(sd);
         if (header == nullptr) {
-            auto path = otherEgtbFile.getPath(sd);
+            auto path = otherchessFile.getPath(sd);
             if (!path.empty()) {
                 setPath(path, sd);
             }
             continue;
         }
 
-        if (otherEgtbFile.header->isSide(side)) {
+        if (otherchessFile.header->isSide(side)) {
             header->addSide(side);
-            setPath(otherEgtbFile.getPath(sd), sd);
+            setPath(otherchessFile.getPath(sd), sd);
 
             if (compressBlockTables[sd]) {
                 free(compressBlockTables[sd]);
             }
-            compressBlockTables[sd] = otherEgtbFile.compressBlockTables[sd];
+            compressBlockTables[sd] = otherchessFile.compressBlockTables[sd];
 
-            if (pBuf[sd] == nullptr && otherEgtbFile.pBuf[sd] != nullptr) {
-                pBuf[sd] = otherEgtbFile.pBuf[sd];
-                startpos[sd] = otherEgtbFile.startpos[sd];
-                endpos[sd] = otherEgtbFile.endpos[sd];
+            if (pBuf[sd] == nullptr && otherchessFile.pBuf[sd] != nullptr) {
+                pBuf[sd] = otherchessFile.pBuf[sd];
+                startpos[sd] = otherchessFile.startpos[sd];
+                endpos[sd] = otherchessFile.endpos[sd];
 
-                otherEgtbFile.pBuf[sd] = nullptr;
-                otherEgtbFile.startpos[sd] = 0;
-                otherEgtbFile.endpos[sd] = 0;
-                otherEgtbFile.compressBlockTables[sd] = nullptr;
+                otherchessFile.pBuf[sd] = nullptr;
+                otherchessFile.startpos[sd] = 0;
+                otherchessFile.endpos[sd] = 0;
+                otherchessFile.compressBlockTables[sd] = nullptr;
             }
         }
     }
 }
 
-void EgtbFile::setPath(const std::string& s, int sd) {
+void chessFile::setPath(const std::string& s, int sd) {
     auto ss = s;
     toLower(ss);
     if (sd != 0 && sd != 1) {
@@ -161,7 +137,7 @@ void EgtbFile::setPath(const std::string& s, int sd) {
     path[sd] = s;
 }
 
-bool EgtbFile::createBuf(i64 len, int sd) {
+bool chessFile::createBuf(i64 len, int sd) {
     pBuf[sd] = (char *)malloc(len + 16);
     startpos[sd] = 0; endpos[sd] = 0;
     return pBuf[sd];
@@ -171,16 +147,16 @@ bool EgtbFile::createBuf(i64 len, int sd) {
 //////////////////////////////////////////////////////////////////////
 // Preload files
 //////////////////////////////////////////////////////////////////////
-bool EgtbFile::preload(const std::string& path, EgtbMemMode _memMode, EgtbLoadMode _loadMode) {
-    if (_memMode == EgtbMemMode::smart) {
-        _memMode = getSize() < EGTB_SMART_MODE_THRESHOLD ? EgtbMemMode::all : EgtbMemMode::tiny;
+bool chessFile::preload(const std::string& path, chessMemMode _memMode, chessLoadMode _loadMode) {
+    if (_memMode == chessMemMode::smart) {
+        _memMode = getSize() < chess_SMART_MODE_THRESHOLD ? chessMemMode::all : chessMemMode::tiny;
     }
 
     memMode = _memMode;
     loadMode = _loadMode;
 
-    loadStatus = EgtbLoadStatus::none;
-    if (loadMode == EgtbLoadMode::onrequest) {
+    loadStatus = chessLoadStatus::none;
+    if (loadMode == chessLoadMode::onrequest) {
         auto theName = getFileName(path);
         if (theName.length() < 4) {
             return false;
@@ -190,26 +166,26 @@ bool EgtbFile::preload(const std::string& path, EgtbMemMode _memMode, EgtbLoadMo
         setPath(path, loadingSd);
 
         theName = theName.substr(0, theName.length() - 1); // remove W / B
-        egtbName = theName;
+        chessName = theName;
 
         setupIdxComputing(getName(), 0, 3);
         return true;
     }
 
     bool r = loadHeaderAndTable(path);
-    loadStatus = r ? EgtbLoadStatus::loaded : EgtbLoadStatus::error;
+    loadStatus = r ? chessLoadStatus::loaded : chessLoadStatus::error;
     return r;
 }
 
 // Load all data too if requested
-bool EgtbFile::loadHeaderAndTable(const std::string& path) {
+bool chessFile::loadHeaderAndTable(const std::string& path) {
     assert(path.size() > 8);
     std::ifstream file(path, std::ios::binary);
 
     // if there are files for both sides, header has been created already
     auto oldSide = Side::none;
     if (header == nullptr) {
-        header = new EgtbFileHeader();
+        header = new chessFileHeader();
     } else {
         oldSide = header->isSide(Side::black) ? Side::black : Side::white;
     }
@@ -219,7 +195,7 @@ bool EgtbFile::loadHeaderAndTable(const std::string& path) {
     if (file && header->readFile(file) && header->isValid()) {
         loadingSide = header->isSide(Side::white) ? Side::white : Side::black;
         assert(loadingSide == (path.find("w.") != std::string::npos ? Side::white : Side::black));
-        egtbName = header->name;
+        chessName = header->name;
 
         setPath(path, static_cast<int>(loadingSide));
         header->setOnlySide(loadingSide);
@@ -246,7 +222,7 @@ bool EgtbFile::loadHeaderAndTable(const std::string& path) {
         compressBlockTables[sd] = (u32*) malloc(blockTableSz + 64);
 
         if (!file.read((char *)compressBlockTables[sd], blockTableSz)) {
-            if (egtbVerbose) {
+            if (chessVerbose) {
                 std::cerr << "Error: cannot read " << path << std::endl;
             }
             file.close();
@@ -257,20 +233,20 @@ bool EgtbFile::loadHeaderAndTable(const std::string& path) {
 
     }
 
-    if (r && memMode == EgtbMemMode::all) {
+    if (r && memMode == chessMemMode::all) {
         r = loadAllData(file, loadingSide);
     }
     file.close();
 
 
-    if (!r && egtbVerbose) {
+    if (!r && chessVerbose) {
         std::cerr << "Error: cannot read " << path << std::endl;
     }
 
     return r;
 }
 
-bool EgtbFile::loadAllData(std::ifstream& file, Side side) {
+bool chessFile::loadAllData(std::ifstream& file, Side side) {
 
     auto sd = static_cast<int>(side);
     startpos[sd] = endpos[sd] = 0;
@@ -279,16 +255,16 @@ bool EgtbFile::loadAllData(std::ifstream& file, Side side) {
         auto blockCnt = getCompresseBlockCount();
         int blockTableSz = blockCnt * sizeof(u32);
 
-        i64 seekpos = EGTB_HEADER_SIZE + blockTableSz;
+        i64 seekpos = chess_HEADER_SIZE + blockTableSz;
         file.seekg(seekpos, std::ios::beg);
 
         createBuf(getSize(), sd); assert(pBuf[sd]);
 
-        auto compDataSz = compressBlockTables[sd][blockCnt - 1] & ~EGTB_UNCOMPRESS_BIT;
+        auto compDataSz = compressBlockTables[sd][blockCnt - 1] & ~chess_UNCOMPRESS_BIT;
 
         char* tempBuf = (char*) malloc(compDataSz + 64);
         if (file.read(tempBuf, compDataSz)) {
-            auto originSz = decompressAllBlocks(EGTB_SIZE_COMPRESS_BLOCK, blockCnt, compressBlockTables[sd], (char*)pBuf[sd], getSize(), tempBuf, compDataSz);
+            auto originSz = decompressAllBlocks(chess_SIZE_COMPRESS_BLOCK, blockCnt, compressBlockTables[sd], (char*)pBuf[sd], getSize(), tempBuf, compDataSz);
             assert(originSz == getSize());
 
             endpos[sd] = originSz;
@@ -300,7 +276,7 @@ bool EgtbFile::loadAllData(std::ifstream& file, Side side) {
     } else {
         auto sz = getSize();
         createBuf(sz, sd);
-        i64 seekpos = EGTB_HEADER_SIZE;
+        i64 seekpos = chess_HEADER_SIZE;
         file.seekg(seekpos, std::ios::beg);
 
         if (file.read(pBuf[sd], sz)) {
@@ -311,13 +287,13 @@ bool EgtbFile::loadAllData(std::ifstream& file, Side side) {
     return startpos[sd] < endpos[sd];
 }
 
-void EgtbFile::checkToLoadHeaderAndTable() {
-    if (header != nullptr && loadStatus != EgtbLoadStatus::none) {
+void chessFile::checkToLoadHeaderAndTable() {
+    if (header != nullptr && loadStatus != chessLoadStatus::none) {
         return;
     }
 
     std::lock_guard<std::mutex> thelock(mtx);
-    if (header != nullptr && loadStatus != EgtbLoadStatus::none) {
+    if (header != nullptr && loadStatus != chessLoadStatus::none) {
         return;
     }
 
@@ -329,10 +305,10 @@ void EgtbFile::checkToLoadHeaderAndTable() {
         r = loadHeaderAndTable(thepath);
     }
 
-    loadStatus = r ? EgtbLoadStatus::loaded : EgtbLoadStatus::error;
+    loadStatus = r ? chessLoadStatus::loaded : chessLoadStatus::error;
 }
 
-bool EgtbFile::readBuf(i64 idx, int sd)
+bool chessFile::readBuf(i64 idx, int sd)
 {
     if (!pBuf[sd]) {
         createBuf(getBufSize(), sd);
@@ -344,7 +320,7 @@ bool EgtbFile::readBuf(i64 idx, int sd)
     bool r = false;
     std::ifstream file(getPath(sd), std::ios::binary);
     if (file) {
-        if (memMode == EgtbMemMode::all) {
+        if (memMode == chessMemMode::all) {
             Side side = static_cast<Side>(sd);
             r = loadAllData(file, side);
         } else if (isCompressed() && compressBlockTables[sd]) {
@@ -352,7 +328,7 @@ bool EgtbFile::readBuf(i64 idx, int sd)
         } else {
             auto beginIdx = (idx + bufCnt <= getSize()) ? idx : 0;
             auto x = beginIdx;
-            i64 seekpos = EGTB_HEADER_SIZE + x;
+            i64 seekpos = chess_HEADER_SIZE + x;
             file.seekg(seekpos, std::ios::beg);
 
             if (file.read(pBuf[sd], bufsz)) {
@@ -365,33 +341,33 @@ bool EgtbFile::readBuf(i64 idx, int sd)
 
     file.close();
 
-    if (!r && egtbVerbose) {
+    if (!r && chessVerbose) {
         std::cerr << "Error: cannot read " << getPath(sd) << std::endl;
     }
 
     return r;
 }
 
-bool EgtbFile::readCompressedBlock(std::ifstream& file, i64 idx, int sd, char* pDest)
+bool chessFile::readCompressedBlock(std::ifstream& file, i64 idx, int sd, char* pDest)
 {
     auto blockCnt = getCompresseBlockCount();
     int blockTableSz = blockCnt * sizeof(u32);
 
-    const int blockSize = EGTB_SIZE_COMPRESS_BLOCK;
+    const int blockSize = chess_SIZE_COMPRESS_BLOCK;
     auto blockIdx = idx / blockSize;
     startpos[sd] = endpos[sd] = blockIdx * blockSize;
 
-    auto iscompressed = !(compressBlockTables[sd][blockIdx] & EGTB_UNCOMPRESS_BIT);
-    auto blockOffset = blockIdx == 0 ? 0 : (compressBlockTables[sd][blockIdx - 1] & ~EGTB_UNCOMPRESS_BIT);
+    auto iscompressed = !(compressBlockTables[sd][blockIdx] & chess_UNCOMPRESS_BIT);
+    auto blockOffset = blockIdx == 0 ? 0 : (compressBlockTables[sd][blockIdx - 1] & ~chess_UNCOMPRESS_BIT);
 
-    auto compDataSz = (compressBlockTables[sd][blockIdx] & ~EGTB_UNCOMPRESS_BIT) - blockOffset;
+    auto compDataSz = (compressBlockTables[sd][blockIdx] & ~chess_UNCOMPRESS_BIT) - blockOffset;
 
-    i64 seekpos = EGTB_HEADER_SIZE + blockTableSz + blockOffset;
+    i64 seekpos = chess_HEADER_SIZE + blockTableSz + blockOffset;
     file.seekg(seekpos, std::ios::beg);
 
     if (iscompressed) {
         if (pCompressBuf == nullptr) {
-            pCompressBuf = (char*) malloc(EGTB_SIZE_COMPRESS_BLOCK * 3 / 2);
+            pCompressBuf = (char*) malloc(chess_SIZE_COMPRESS_BLOCK * 3 / 2);
         }
         if (file.read(pCompressBuf, compDataSz)) {
             auto curBlockSize = (int)MIN(getSize() - startpos[sd], (i64)blockSize);
@@ -404,7 +380,7 @@ bool EgtbFile::readCompressedBlock(std::ifstream& file, i64 idx, int sd, char* p
         return true;
     }
 
-    if (egtbVerbose) {
+    if (chessVerbose) {
         std::cerr << "Error: cannot read " << getPath(sd) << std::endl;
     }
     return false;
@@ -413,54 +389,54 @@ bool EgtbFile::readCompressedBlock(std::ifstream& file, i64 idx, int sd, char* p
 //////////////////////////////////////////////////////////////////////
 // Get scores
 //////////////////////////////////////////////////////////////////////
-int EgtbFile::cellToScore(char cell) {
-    if (header->property & EGTB_PROP_SPECIAL_SCORE_RANGE) {
+int chessFile::cellToScore(char cell) {
+    if (header->property & chess_PROP_SPECIAL_SCORE_RANGE) {
         u8 s = (u8)cell;
         if (s >= TB_SPECIAL_DRAW) {
-            if (s == TB_SPECIAL_DRAW) return EGTB_SCORE_DRAW;
+            if (s == TB_SPECIAL_DRAW) return chess_SCORE_DRAW;
             if (s < TB_SPECIAL_START_LOSING) {
                 int mi = (s - TB_SPECIAL_START_MATING) * 2 + 1;
-                return EGTB_SCORE_MATE - mi;
+                return chess_SCORE_MATE - mi;
             }
 
             int mi = (s - TB_SPECIAL_START_LOSING) * 2;
-            return -EGTB_SCORE_MATE + mi;
+            return -chess_SCORE_MATE + mi;
         }
-        return EGTB_SCORE_DRAW;
+        return chess_SCORE_DRAW;
     }
 
     u8 s = (u8)cell;
     if (s >= TB_DRAW) {
-        if (s == TB_DRAW) return EGTB_SCORE_DRAW;
+        if (s == TB_DRAW) return chess_SCORE_DRAW;
         if (s < TB_START_LOSING) {
             int mi = (s - TB_START_MATING) * 2 + 1;
-            return EGTB_SCORE_MATE - mi;
+            return chess_SCORE_MATE - mi;
         }
 
         int mi = (s - TB_START_LOSING) * 2;
-        return -EGTB_SCORE_MATE + mi;
+        return -chess_SCORE_MATE + mi;
     }
 
     switch (s) {
         case TB_MISSING:
-            return EGTB_SCORE_MISSING;
+            return chess_SCORE_MISSING;
 
         case TB_WINING:
-            return EGTB_SCORE_WINNING;
+            return chess_SCORE_WINNING;
 
         case TB_UNKNOWN:
-            return EGTB_SCORE_UNKNOWN;
+            return chess_SCORE_UNKNOWN;
 
         case TB_ILLEGAL:
-            return EGTB_SCORE_ILLEGAL;
+            return chess_SCORE_ILLEGAL;
 
         case TB_UNSET:
         default:
-            return EGTB_SCORE_UNSET;
+            return chess_SCORE_UNSET;
     }
 }
 
-char EgtbFile::getCell(i64 idx, Side side)
+char chessFile::getCell(i64 idx, Side side)
 {
     if (idx >= getSize()) {
         return TB_MISSING;
@@ -478,27 +454,27 @@ char EgtbFile::getCell(i64 idx, Side side)
     return ch;
 }
 
-char EgtbFile::getCell(const EgtbBoardCore& board, Side side) {
+char chessFile::getCell(const chessBoardCore& board, Side side) {
     i64 key = getKey(board).key;
     return getCell(key, side);
 }
 
-int EgtbFile::getScoreNoLock(const EgtbBoardCore& board, Side side) {
-    EgtbKeyRec r = getKey(board);
+int chessFile::getScoreNoLock(const chessBoardCore& board, Side side) {
+    chessKeyRec r = getKey(board);
     if (r.flipSide) {
         side = getXSide(side);
     }
     return getScoreNoLock(r.key, side);
 }
 
-int EgtbFile::getScoreNoLock(i64 idx, Side side)
+int chessFile::getScoreNoLock(i64 idx, Side side)
 {
     char cell = getCell(idx, side);
     return cellToScore(cell);
 }
 
-int EgtbFile::getScore(const EgtbBoardCore& board, Side side, bool useLock) {
-    EgtbKeyRec r = getKey(board);
+int chessFile::getScore(const chessBoardCore& board, Side side, bool useLock) {
+    chessKeyRec r = getKey(board);
     if (r.flipSide) {
         side = getXSide(side);
     }
@@ -506,11 +482,11 @@ int EgtbFile::getScore(const EgtbBoardCore& board, Side side, bool useLock) {
     return getScore(r.key, side, useLock);
 }
 
-int EgtbFile::getScore(i64 idx, Side side, bool useLock)
+int chessFile::getScore(i64 idx, Side side, bool useLock)
 {
     checkToLoadHeaderAndTable();
 
-    if (useLock && (memMode != EgtbMemMode::all || !isDataReady(idx, static_cast<int>(side)))) {
+    if (useLock && (memMode != chessMemMode::all || !isDataReady(idx, static_cast<int>(side)))) {
         std::lock_guard<std::mutex> thelock(sdmtx[static_cast<int>(side)]);
         return getScoreNoLock(idx, side);
     }
@@ -522,7 +498,7 @@ int EgtbFile::getScore(i64 idx, Side side, bool useLock)
 //////////////////////////////////////////////////////////////////////
 
 
-i64 EgtbFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int* pieceCount, u16 order, int version)
+i64 chessFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int* pieceCount, u16 order, int version)
 {
     auto havingPawns = name.find("p") != std::string::npos;
 
@@ -533,7 +509,7 @@ i64 EgtbFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int*
         char ch = name[i];
         if (ch == 'k') { // king
             if (i == 0) {
-                idxArr[k++] = (havingPawns ? EGTB_IDX_KK_2 : EGTB_IDX_KK_8) | (W << 8);
+                idxArr[k++] = (havingPawns ? chess_IDX_KK_2 : chess_IDX_KK_8) | (W << 8);
                 assert(idxArr[k - 1] >> 8 == sd);
             } else {
                 sd = B;
@@ -547,7 +523,7 @@ i64 EgtbFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int*
         const char* p = strchr(pieceTypeName, ch);
         int t = (int)(p - pieceTypeName);
 
-        t += EGTB_IDX_Q - 1;
+        t += chess_IDX_Q - 1;
 
         for (int j = 0;; j++) {
             if (ch != name[i + 1]) {
@@ -560,7 +536,7 @@ i64 EgtbFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int*
     }
 
     bool enpassantable = pawnCnt[0] > 0 && pawnCnt[1] > 0;
-    idxArr[k] = EGTB_IDX_NONE;
+    idxArr[k] = chess_IDX_NONE;
 
     // permutation
     if (order != 0) {
@@ -577,7 +553,7 @@ i64 EgtbFile::parseAttr(const std::string& name, int* idxArr, i64* idxMult, int*
     return parseAttr(idxArr, idxMult, pieceCount, nullptr, enpassantable);
 }
 
-i64 EgtbFile::parseAttr(const int* idxArr, i64* idxMult, int* pieceCount, const int* orderArray, bool enpassantable) {
+i64 chessFile::parseAttr(const int* idxArr, i64* idxMult, int* pieceCount, const int* orderArray, bool enpassantable) {
     memset(pieceCount, 0, 2 * 7 * sizeof(int));
 
     pieceCount[static_cast<int>(PieceType::king)] = 1;
@@ -587,7 +563,7 @@ i64 EgtbFile::parseAttr(const int* idxArr, i64* idxMult, int* pieceCount, const 
     int n = 0;
     for (int i = 0; ; i++, n++) {
         auto a = idxArr[i];
-        if (a == EGTB_IDX_NONE) {
+        if (a == chess_IDX_NONE) {
             break;
         }
 
@@ -597,67 +573,67 @@ i64 EgtbFile::parseAttr(const int* idxArr, i64* idxMult, int* pieceCount, const 
 
         a &= 0xff;
         switch (a) {
-            case EGTB_IDX_K_2:
-                h = EGTB_SIZE_K2;
+            case chess_IDX_K_2:
+                h = chess_SIZE_K2;
                 break;
-            case EGTB_IDX_K_8:
-                h = EGTB_SIZE_K8;
+            case chess_IDX_K_8:
+                h = chess_SIZE_K8;
                 break;
-            case EGTB_IDX_K:
-                h = EGTB_SIZE_K;
-                break;
-
-            case EGTB_IDX_KK_2:
-                h = EGTB_SIZE_KK2;
-                break;
-            case EGTB_IDX_KK_8:
-                h = EGTB_SIZE_KK8;
+            case chess_IDX_K:
+                h = chess_SIZE_K;
                 break;
 
-            case EGTB_IDX_Q:
-            case EGTB_IDX_R:
-            case EGTB_IDX_B:
-            case EGTB_IDX_H:
-            case EGTB_IDX_P:
+            case chess_IDX_KK_2:
+                h = chess_SIZE_KK2;
+                break;
+            case chess_IDX_KK_8:
+                h = chess_SIZE_KK8;
+                break;
+
+            case chess_IDX_Q:
+            case chess_IDX_R:
+            case chess_IDX_B:
+            case chess_IDX_H:
+            case chess_IDX_P:
             {
-                h = a != EGTB_IDX_P ? EGTB_SIZE_X : EGTB_SIZE_P;
-                int type = 1 + a - EGTB_IDX_Q;
+                h = a != chess_IDX_P ? chess_SIZE_X : chess_SIZE_P;
+                int type = 1 + a - chess_IDX_Q;
                 pieceCount[d + type] = 1;
                 break;
             }
 
-            case EGTB_IDX_QQ:
-            case EGTB_IDX_RR:
-            case EGTB_IDX_BB:
-            case EGTB_IDX_HH:
-            case EGTB_IDX_PP:
+            case chess_IDX_QQ:
+            case chess_IDX_RR:
+            case chess_IDX_BB:
+            case chess_IDX_HH:
+            case chess_IDX_PP:
             {
-                h = a != EGTB_IDX_PP ? EGTB_SIZE_XX : EGTB_SIZE_PP;
-                int type = 1 + a - EGTB_IDX_QQ;
+                h = a != chess_IDX_PP ? chess_SIZE_XX : chess_SIZE_PP;
+                int type = 1 + a - chess_IDX_QQ;
                 pieceCount[d + type] = 2;
                 break;
             }
 
-            case EGTB_IDX_QQQ:
-            case EGTB_IDX_RRR:
-            case EGTB_IDX_BBB:
-            case EGTB_IDX_HHH:
-            case EGTB_IDX_PPP:
+            case chess_IDX_QQQ:
+            case chess_IDX_RRR:
+            case chess_IDX_BBB:
+            case chess_IDX_HHH:
+            case chess_IDX_PPP:
             {
-                h = a != EGTB_IDX_PPP ? EGTB_SIZE_XXX : EGTB_SIZE_PPP;
-                int type = 1 + a - EGTB_IDX_QQQ;
+                h = a != chess_IDX_PPP ? chess_SIZE_XXX : chess_SIZE_PPP;
+                int type = 1 + a - chess_IDX_QQQ;
                 pieceCount[d + type] = 3;
                 break;
             }
 
-            case EGTB_IDX_QQQQ:
-            case EGTB_IDX_RRRR:
-            case EGTB_IDX_BBBB:
-            case EGTB_IDX_HHHH:
-            case EGTB_IDX_PPPP:
+            case chess_IDX_QQQQ:
+            case chess_IDX_RRRR:
+            case chess_IDX_BBBB:
+            case chess_IDX_HHHH:
+            case chess_IDX_PPPP:
             {
-                h = a != EGTB_IDX_PPPP ? EGTB_SIZE_XXXX : EGTB_SIZE_PPPP;
-                int type = 1 + a - EGTB_IDX_QQQQ;
+                h = a != chess_IDX_PPPP ? chess_SIZE_XXXX : chess_SIZE_PPPP;
+                int type = 1 + a - chess_IDX_QQQQ;
                 pieceCount[d + type] = 4;
                 break;
             }
@@ -681,14 +657,14 @@ i64 EgtbFile::parseAttr(const int* idxArr, i64* idxMult, int* pieceCount, const 
     return sz;
 }
 
-i64 EgtbFile::setupIdxComputing(const std::string& name, int order, int version)
+i64 chessFile::setupIdxComputing(const std::string& name, int order, int version)
 {
-    size = EgtbFile::parseAttr(name.c_str(), idxArr, idxMult, (int*)pieceCount, order, version);
+    size = chessFile::parseAttr(name.c_str(), idxArr, idxMult, (int*)pieceCount, order, version);
     enpassantable = pieceCount[0][static_cast<int>(PieceType::pawn)] > 0 && pieceCount[1][static_cast<int>(PieceType::pawn)] > 0;
     return size;
 }
 
-i64 EgtbFile::computeSize(const std::string &name)
+i64 chessFile::computeSize(const std::string &name)
 {
     int idxArr[32];
     i64 idxMult[32];
@@ -696,7 +672,7 @@ i64 EgtbFile::computeSize(const std::string &name)
     return parseAttr(name, idxArr, idxMult, (int*)pieceCount, 0, 3);
 }
 
-std::string EgtbFile::pieceListToName(const Piece* pieceList) {
+std::string chessFile::pieceListToName(const Piece* pieceList) {
     int pieceCnt[2][6];
     memset(pieceCnt, 0, sizeof(pieceCnt));
 
@@ -724,15 +700,15 @@ std::string EgtbFile::pieceListToName(const Piece* pieceList) {
     return s;
 }
 
-EgtbKeyRec EgtbFile::getKey(const EgtbBoardCore& board) const {
-    EgtbKeyRec rec;
-    EgtbKey::getKey(rec, board, idxArr, idxMult, header ? header->order : 0);
+chessKeyRec chessFile::getKey(const chessBoardCore& board) const {
+    chessKeyRec rec;
+    chessKey::getKey(rec, board, idxArr, idxMult, header ? header->order : 0);
     return rec;
 }
 
 extern const int tb_kIdxToPos[10];
 
-bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side firstsider) const
+bool chessFile::setupBoard(chessBoardCore& board, i64 idx, FlipMode flip, Side firstsider) const
 {
     board.enpassant = -1;
     board._status = 0;
@@ -744,13 +720,13 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
     }
     const int orderArray[] = { order & 0x7, (order >> 3) & 0x7, (order >> 6) & 0x7, (order >> 9) & 0x7 , (order >> 12) & 0x7, (order >> 15) & 0x7 };
 
-    EgtbBoardCore::pieceList_reset((Piece*)board.pieceList);
+    chessBoardCore::pieceList_reset((Piece*)board.pieceList);
 
     i64 rest = idx;
 
     int sds[20] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-    for(int i = 0, sd = static_cast<int>(firstsider), stdSd = W; idxArr[i] != EGTB_IDX_NONE; i++) {
+    for(int i = 0, sd = static_cast<int>(firstsider), stdSd = W; idxArr[i] != chess_IDX_NONE; i++) {
         int j = orderArray[i];
         if (idxArr[j] >> 8 != stdSd) {
             sd = 1 - sd;
@@ -759,7 +735,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
         sds[j] = sd;
     }
 
-    for(int i = 0; idxArr[i] != EGTB_IDX_NONE; i++) {
+    for(int i = 0; idxArr[i] != chess_IDX_NONE; i++) {
         auto arr = idxArr[i] & 0xff;
         auto mul = idxMult[i];
 
@@ -770,7 +746,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
         auto side = static_cast<Side>(sd);
 
         switch (arr) {
-            case EGTB_IDX_K_2:
+            case chess_IDX_K_2:
             {
                 assert(key >= 0 && key < 32);
                 int r = key >> 2, f = key & 0x3;
@@ -781,7 +757,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
                 break;
             }
 
-            case EGTB_IDX_K_8:
+            case chess_IDX_K_8:
             {
                 auto pos = tb_kIdxToPos[key];
                 board.pieceList[sd][0].type = PieceType::king;
@@ -789,7 +765,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
                 board.pieceList[sd][0].idx = pos;
                 break;
             }
-            case EGTB_IDX_K:
+            case chess_IDX_K:
             {
                 board.pieceList[sd][0].type = PieceType::king;
                 board.pieceList[sd][0].side = side;
@@ -797,7 +773,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
                 break;
             }
 
-            case EGTB_IDX_KK_2:
+            case chess_IDX_KK_2:
             {
                 int kk = kk_2[key];
                 int k0 = kk >> 8, k1 = kk & 0xff;
@@ -811,7 +787,7 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
                 break;
             }
 
-            case EGTB_IDX_KK_8:
+            case chess_IDX_KK_8:
             {
                 int kk = kk_8[key];
                 int k0 = kk >> 8, k1 = kk & 0xff;
@@ -825,53 +801,53 @@ bool EgtbFile::setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side fir
                 break;
             }
 
-            case EGTB_IDX_Q:
-            case EGTB_IDX_R:
-            case EGTB_IDX_B:
-            case EGTB_IDX_H:
-            case EGTB_IDX_P:
+            case chess_IDX_Q:
+            case chess_IDX_R:
+            case chess_IDX_B:
+            case chess_IDX_H:
+            case chess_IDX_P:
             {
-                PieceType type = static_cast<PieceType>(arr - EGTB_IDX_Q + 1);
-                if (!egtbKey.setupBoard_x(board, key, type, side)) {
+                PieceType type = static_cast<PieceType>(arr - chess_IDX_Q + 1);
+                if (!chessKey.setupBoard_x(board, key, type, side)) {
                     return false;
                 }
                 break;
             }
 
-            case EGTB_IDX_QQ:
-            case EGTB_IDX_RR:
-            case EGTB_IDX_BB:
-            case EGTB_IDX_HH:
-            case EGTB_IDX_PP:
+            case chess_IDX_QQ:
+            case chess_IDX_RR:
+            case chess_IDX_BB:
+            case chess_IDX_HH:
+            case chess_IDX_PP:
             {
-                PieceType type = static_cast<PieceType>(arr - EGTB_IDX_QQ + 1);
-                if (!egtbKey.setupBoard_xx(board, key, type, side)) {
+                PieceType type = static_cast<PieceType>(arr - chess_IDX_QQ + 1);
+                if (!chessKey.setupBoard_xx(board, key, type, side)) {
                     return false;
                 }
                 break;
             }
 
-            case EGTB_IDX_QQQ:
-            case EGTB_IDX_RRR:
-            case EGTB_IDX_BBB:
-            case EGTB_IDX_HHH:
-            case EGTB_IDX_PPP:
+            case chess_IDX_QQQ:
+            case chess_IDX_RRR:
+            case chess_IDX_BBB:
+            case chess_IDX_HHH:
+            case chess_IDX_PPP:
             {
-                PieceType type = static_cast<PieceType>(arr - EGTB_IDX_QQQ + 1);
-                if (!egtbKey.setupBoard_xxx(board, key, type, side)) {
+                PieceType type = static_cast<PieceType>(arr - chess_IDX_QQQ + 1);
+                if (!chessKey.setupBoard_xxx(board, key, type, side)) {
                     return false;
                 }
                 break;
             }
 
-            case EGTB_IDX_QQQQ:
-            case EGTB_IDX_RRRR:
-            case EGTB_IDX_BBBB:
-            case EGTB_IDX_HHHH:
-            case EGTB_IDX_PPPP:
+            case chess_IDX_QQQQ:
+            case chess_IDX_RRRR:
+            case chess_IDX_BBBB:
+            case chess_IDX_HHHH:
+            case chess_IDX_PPPP:
             {
-                PieceType type = static_cast<PieceType>(arr - EGTB_IDX_QQQQ + 1);
-                if (!egtbKey.setupBoard_xxxx(board, key, type, side)) {
+                PieceType type = static_cast<PieceType>(arr - chess_IDX_QQQQ + 1);
+                if (!chessKey.setupBoard_xxxx(board, key, type, side)) {
                     return false;
                 }
                 break;

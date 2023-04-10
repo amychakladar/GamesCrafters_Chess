@@ -1,36 +1,12 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
+#include "chess.h"
+#include "chessKey.h"
 
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#include "Egtb.h"
-#include "EgtbKey.h"
-
-namespace egtb {
-    EgtbKey egtbKey;
+namespace chess {
+    chessKey chessKey;
 } // namespace
 
 
-using namespace egtb;
+using namespace chess;
 
 extern const int tb_kIdxToPos[10];
 extern int *kk_2, *kk_8;
@@ -89,8 +65,8 @@ static void sort_tbkeys(int* tbkeys, int sz) {
     });
 }
 
-void EgtbKey::createKingKeys() {
-    kk_8 = new int[EGTB_SIZE_KK8];
+void chessKey::createKingKeys() {
+    kk_8 = new int[chess_SIZE_KK8];
     int x = 0;
 
     for(int i = 0; i < sizeof(tb_kIdxToPos) / sizeof(int); i++) {
@@ -105,7 +81,7 @@ void EgtbKey::createKingKeys() {
         }
     }
 
-    kk_2 = new int[EGTB_SIZE_KK2];
+    kk_2 = new int[chess_SIZE_KK2];
     x = 0;
 
     for(int k0 = 0; k0 < 64; k0++) {
@@ -125,10 +101,10 @@ void EgtbKey::createKingKeys() {
     }
 }
 
-void EgtbKey::createXXKeys() {
-    tb_xx = new int[EGTB_SIZE_XX];
-    tb_xxx = new int[EGTB_SIZE_XXX];
-    tb_xxxx = new int[EGTB_SIZE_XXXX];
+void chessKey::createXXKeys() {
+    tb_xx = new int[chess_SIZE_XX];
+    tb_xxx = new int[chess_SIZE_XXX];
+    tb_xxxx = new int[chess_SIZE_XXXX];
 
     int k0 = 0, k1 = 0, k2 = 0;
 
@@ -145,9 +121,9 @@ void EgtbKey::createXXKeys() {
     }
 
     // Pawns
-    tb_pp = new int[EGTB_SIZE_PP];
-    tb_ppp = new int[EGTB_SIZE_PPP];
-    tb_pppp = new int[EGTB_SIZE_PPPP];
+    tb_pp = new int[chess_SIZE_PP];
+    tb_ppp = new int[chess_SIZE_PPP];
+    tb_pppp = new int[chess_SIZE_PPPP];
 
     k0 = k1 = k2 = 0;
 
@@ -164,73 +140,73 @@ void EgtbKey::createXXKeys() {
     }
 }
 
-int EgtbKey::getKey_x(int pos0)
+int chessKey::getKey_x(int pos0)
 {
     return pos0;
 }
 
-int EgtbKey::getKey_xx(int pos0, int pos1)
+int chessKey::getKey_xx(int pos0, int pos1)
 {
     auto p0 = MIN(pos0, pos1);
     auto p1 = MAX(pos0, pos1);
 
     int x = p0 << 8 | p1;
 
-    return bSearch(tb_xx, EGTB_SIZE_XX, x);
+    return bSearch(tb_xx, chess_SIZE_XX, x);
 }
 
-int EgtbKey::getKey_xxx(int pos0, int pos1, int pos2)
+int chessKey::getKey_xxx(int pos0, int pos1, int pos2)
 {
     int p[3] = { pos0, pos1, pos2 };
     sort_tbkeys(p, 3);
 
     int x = p[0] << 16 | p[1] << 8 | p[2];
-    return bSearch(tb_xxx, EGTB_SIZE_XXX, x);
+    return bSearch(tb_xxx, chess_SIZE_XXX, x);
 }
 
-int EgtbKey::getKey_xxxx(int pos0, int pos1, int pos2, int pos3)
+int chessKey::getKey_xxxx(int pos0, int pos1, int pos2, int pos3)
 {
     int p[4] = { pos0, pos1, pos2, pos3 };
     sort_tbkeys(p, 4);
 
     int x = p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
-    return bSearch(tb_xxxx, EGTB_SIZE_XXXX, x);
+    return bSearch(tb_xxxx, chess_SIZE_XXXX, x);
 }
 
 
-int EgtbKey::getKey_p(int pos0)
+int chessKey::getKey_p(int pos0)
 {
     assert(pos0 >= 8 && pos0 < 56);
     return pos0 - 8;
 }
 
-int EgtbKey::getKey_pp(int pos0, int pos1)
+int chessKey::getKey_pp(int pos0, int pos1)
 {
     auto p0 = MIN(pos0, pos1);
     auto p1 = MAX(pos0, pos1);
 
     int x = p0 << 8 | p1;
-    return bSearch(tb_pp, EGTB_SIZE_PP, x);
+    return bSearch(tb_pp, chess_SIZE_PP, x);
 }
 
-int EgtbKey::getKey_ppp(int pos0, int pos1, int pos2)
+int chessKey::getKey_ppp(int pos0, int pos1, int pos2)
 {
     int p[3] = { pos0, pos1, pos2 };
     sort_tbkeys(p, 3);
     int x = p[0] << 16 | p[1] << 8 | p[2];
-    return bSearch(tb_ppp, EGTB_SIZE_PPP, x);
+    return bSearch(tb_ppp, chess_SIZE_PPP, x);
 }
 
-int EgtbKey::getKey_pppp(int pos0, int pos1, int pos2, int pos3)
+int chessKey::getKey_pppp(int pos0, int pos1, int pos2, int pos3)
 {
     int p[4] = { pos0, pos1, pos2, pos3 };
     sort_tbkeys(p, 4);
 
     int x = p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
-    return bSearch(tb_pppp, EGTB_SIZE_PPPP, x);
+    return bSearch(tb_pppp, chess_SIZE_PPPP, x);
 }
 
-bool EgtbKey::setupBoard_x(EgtbBoardCore& board, int key, PieceType type, Side side) const
+bool chessKey::setupBoard_x(chessBoardCore& board, int key, PieceType type, Side side) const
 {
     if (type == PieceType::pawn) {
         key += 8;
@@ -249,14 +225,14 @@ bool EgtbKey::setupBoard_x(EgtbBoardCore& board, int key, PieceType type, Side s
     return false;
 }
 
-bool EgtbKey::setupBoard_xx(EgtbBoardCore& board, int key, PieceType type, Side side) const
+bool chessKey::setupBoard_xx(chessBoardCore& board, int key, PieceType type, Side side) const
 {
     int xx;
 
     if (type != PieceType::pawn) {
         xx = tb_xx[key];
     } else {
-        assert(key < EGTB_SIZE_PP);
+        assert(key < chess_SIZE_PP);
         xx = tb_pp[key];
     }
 
@@ -283,13 +259,13 @@ bool EgtbKey::setupBoard_xx(EgtbBoardCore& board, int key, PieceType type, Side 
     return false;
 }
 
-bool EgtbKey::setupBoard_xxx(EgtbBoardCore& board, int key, PieceType type, Side side) const
+bool chessKey::setupBoard_xxx(chessBoardCore& board, int key, PieceType type, Side side) const
 {
     int xx;
     if (type != PieceType::pawn) {
         xx = tb_xxx[key];
     } else {
-        assert(key >= 0 && key < EGTB_SIZE_PPP);
+        assert(key >= 0 && key < chess_SIZE_PPP);
         xx = tb_ppp[key];
     }
     int pos0 = xx >> 16, pos1 = (xx >> 8) & 0xff, pos2 = xx & 0xff;
@@ -324,13 +300,13 @@ bool EgtbKey::setupBoard_xxx(EgtbBoardCore& board, int key, PieceType type, Side
     return false;
 }
 
-bool EgtbKey::setupBoard_xxxx(EgtbBoardCore& board, int key, PieceType type, Side side) const
+bool chessKey::setupBoard_xxxx(chessBoardCore& board, int key, PieceType type, Side side) const
 {
     int xx;
     if (type != PieceType::pawn) {
         xx = tb_xxxx[key];
     } else {
-        assert(key >= 0 && key < EGTB_SIZE_PPPP);
+        assert(key >= 0 && key < chess_SIZE_PPPP);
         xx = tb_pppp[key];
     }
 
@@ -375,16 +351,16 @@ bool EgtbKey::setupBoard_xxxx(EgtbBoardCore& board, int key, PieceType type, Sid
     return false;
 }
 
-void EgtbKey::initOnce() {
+void chessKey::initOnce() {
     createKingKeys();
     createXXKeys();
 }
 
-EgtbKey::EgtbKey() {
+chessKey::chessKey() {
     initOnce();
 }
 
-void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idxArr, const i64* idxMult, u32 order) {
+void chessKey::getKey(chessKeyRec& rec, const chessBoardCore& board, const int* idxArr, const i64* idxMult, u32 order) {
     int sd = W;
 
     // Check which side for left hand side
@@ -423,7 +399,7 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
 
     i64 key = 0;
 
-    for(int i = 0, stdSd = W; idxArr[i] != EGTB_IDX_NONE; i++) {
+    for(int i = 0, stdSd = W; idxArr[i] != chess_IDX_NONE; i++) {
         int j = o[i];
         auto attr = idxArr[j];
         auto mul = idxMult[j];
@@ -435,26 +411,26 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
 
         attr &= 0xff;
         switch (attr) {
-            case EGTB_IDX_K_8:
+            case chess_IDX_K_8:
             {
                 auto idx = board.pieceList[sd][0].idx;
 
                 int flip = tb_flipMode[idx];
-                flipMode = EgtbBoardCore::flip(flipMode, static_cast<FlipMode>(flip));
-                idx = EgtbBoardCore::flip(idx, flipMode);
+                flipMode = chessBoardCore::flip(flipMode, static_cast<FlipMode>(flip));
+                idx = chessBoardCore::flip(idx, flipMode);
 
                 auto idx2 = tb_kIdx[idx]; assert(idx2 >= 0 && idx2 < 10);
                 key += idx2 * mul;
                 break;
             }
 
-            case EGTB_IDX_K_2:
+            case chess_IDX_K_2:
             {
                 int pos = board.pieceList[sd][0].idx;
-                pos = EgtbBoardCore::flip(pos, flipMode);
+                pos = chessBoardCore::flip(pos, flipMode);
                 auto f = pos & 0x7;
                 if (f > 3) {
-                    flipMode = EgtbBoardCore::flip(flipMode, FlipMode::horizontal);
+                    flipMode = chessBoardCore::flip(flipMode, FlipMode::horizontal);
                     f = 7 - f;
                 }
                 auto r = pos >> 3;
@@ -464,69 +440,69 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
                 break;
             }
 
-            case EGTB_IDX_KK_2:
+            case chess_IDX_KK_2:
             {
-                int pos0 = EgtbBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
-                int pos1 = EgtbBoardCore::flip(board.pieceList[1 - sd][0].idx, flipMode);
+                int pos0 = chessBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
+                int pos1 = chessBoardCore::flip(board.pieceList[1 - sd][0].idx, flipMode);
 
                 if (COL(pos0) > 3) {
-                    flipMode = EgtbBoardCore::flip(flipMode, FlipMode::horizontal);
-                    pos0 = EgtbBoardCore::flip(pos0, FlipMode::horizontal);
-                    pos1 = EgtbBoardCore::flip(pos1, FlipMode::horizontal);
+                    flipMode = chessBoardCore::flip(flipMode, FlipMode::horizontal);
+                    pos0 = chessBoardCore::flip(pos0, FlipMode::horizontal);
+                    pos1 = chessBoardCore::flip(pos1, FlipMode::horizontal);
                 }
 
                 int kk = pos0 << 8 | pos1;
-                int idx = bSearch(kk_2, EGTB_SIZE_KK2, kk);
-                assert(idx >= 0 && idx < EGTB_SIZE_KK2);
+                int idx = bSearch(kk_2, chess_SIZE_KK2, kk);
+                assert(idx >= 0 && idx < chess_SIZE_KK2);
 
                 key += idx * mul;
                 break;
             }
 
-            case EGTB_IDX_KK_8:
+            case chess_IDX_KK_8:
             {
-                int pos0 = EgtbBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
-                int pos1 = EgtbBoardCore::flip(board.pieceList[1 - sd][0].idx, flipMode);
+                int pos0 = chessBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
+                int pos1 = chessBoardCore::flip(board.pieceList[1 - sd][0].idx, flipMode);
 
                 int flip = tb_flipMode[pos0];
 
                 if (flip) {
                     auto flipMode2 = static_cast<FlipMode>(flip);
-                    flipMode = EgtbBoardCore::flip(flipMode, flipMode2);
-                    pos0 = EgtbBoardCore::flip(pos0, flipMode2);
-                    pos1 = EgtbBoardCore::flip(pos1, flipMode2);
+                    flipMode = chessBoardCore::flip(flipMode, flipMode2);
+                    pos0 = chessBoardCore::flip(pos0, flipMode2);
+                    pos1 = chessBoardCore::flip(pos1, flipMode2);
                 }
 
                 int kk = pos0 << 8 | pos1;
-                int idx = bSearch(kk_8, EGTB_SIZE_KK8, kk);
+                int idx = bSearch(kk_8, chess_SIZE_KK8, kk);
                 key += idx * mul;
                 break;
             }
 
-            case EGTB_IDX_K:
+            case chess_IDX_K:
             {
-                auto idx = EgtbBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
+                auto idx = chessBoardCore::flip(board.pieceList[sd][0].idx, flipMode);
                 key += idx * mul;
                 break;
             }
 
-            case EGTB_IDX_Q:
-            case EGTB_IDX_R:
-            case EGTB_IDX_B:
-            case EGTB_IDX_H:
-            case EGTB_IDX_P:
+            case chess_IDX_Q:
+            case chess_IDX_R:
+            case chess_IDX_B:
+            case chess_IDX_H:
+            case chess_IDX_P:
             {
-                PieceType type = static_cast<PieceType>(attr - EGTB_IDX_Q + 1);
+                PieceType type = static_cast<PieceType>(attr - chess_IDX_Q + 1);
                 for(int t = 1; t < 16; t++) {
                     auto p = board.pieceList[sd][t];
                     if (!p.isEmpty() && p.type == type) {
-                        auto pos = EgtbBoardCore::flip(p.idx, flipMode);
+                        auto pos = chessBoardCore::flip(p.idx, flipMode);
                         assert(pos >= 0 && pos < 64);
 
-                        if (attr == EGTB_IDX_P) {
-                            pos = EgtbKey::getKey_p(pos);
+                        if (attr == chess_IDX_P) {
+                            pos = chessKey::getKey_p(pos);
                         } else {
-                            pos = EgtbKey::getKey_x(pos);
+                            pos = chessKey::getKey_x(pos);
                         }
                         key += pos * mul;
                         break;
@@ -535,24 +511,24 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
                 break;
             }
 
-            case EGTB_IDX_QQ:
-            case EGTB_IDX_RR:
-            case EGTB_IDX_BB:
-            case EGTB_IDX_HH:
-            case EGTB_IDX_PP:
+            case chess_IDX_QQ:
+            case chess_IDX_RR:
+            case chess_IDX_BB:
+            case chess_IDX_HH:
+            case chess_IDX_PP:
             {
-                PieceType type = static_cast<PieceType>(attr - EGTB_IDX_QQ + 1);
+                PieceType type = static_cast<PieceType>(attr - chess_IDX_QQ + 1);
 
                 for(int t = 1; t < 16; t++) {
                     auto p0 = board.pieceList[sd][t];
                     if (!p0.isEmpty() && p0.type == type) {
-                        auto idx0 = EgtbBoardCore::flip(p0.idx, flipMode);
+                        auto idx0 = chessBoardCore::flip(p0.idx, flipMode);
                         for(t++; t < 16; t++) {
                             auto p1 = board.pieceList[sd ][t];
                             if (!p1.isEmpty() && p1.type == type) {
-                                auto idx1 = EgtbBoardCore::flip(p1.idx, flipMode);
+                                auto idx1 = chessBoardCore::flip(p1.idx, flipMode);
 
-                                int subKey = type != PieceType::pawn ? EgtbKey::getKey_xx(idx0, idx1) : EgtbKey::getKey_pp(idx0, idx1);
+                                int subKey = type != PieceType::pawn ? chessKey::getKey_xx(idx0, idx1) : chessKey::getKey_pp(idx0, idx1);
                                 key += subKey * mul;
                                 break;
                             }
@@ -563,28 +539,28 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
                 break;
             }
 
-            case EGTB_IDX_QQQ:
-            case EGTB_IDX_RRR:
-            case EGTB_IDX_BBB:
-            case EGTB_IDX_HHH:
-            case EGTB_IDX_PPP:
+            case chess_IDX_QQQ:
+            case chess_IDX_RRR:
+            case chess_IDX_BBB:
+            case chess_IDX_HHH:
+            case chess_IDX_PPP:
             {
-                PieceType type = static_cast<PieceType>(attr - EGTB_IDX_QQQ + 1);
+                PieceType type = static_cast<PieceType>(attr - chess_IDX_QQQ + 1);
 
                 for(int t = 1; t < 16; t++) {
                     auto p0 = board.pieceList[sd][t];
                     if (!p0.isEmpty() && p0.type == type) {
-                        auto idx0 = EgtbBoardCore::flip(p0.idx, flipMode);
+                        auto idx0 = chessBoardCore::flip(p0.idx, flipMode);
                         for(t++; t < 16; t++) {
                             auto p1 = board.pieceList[sd][t];
                             if (!p1.isEmpty() && p1.type == type) {
-                                auto idx1 = EgtbBoardCore::flip(p1.idx, flipMode);
+                                auto idx1 = chessBoardCore::flip(p1.idx, flipMode);
                                 for(t++; t < 16; t++) {
                                     auto p2 = board.pieceList[sd][t];
                                     if (!p2.isEmpty() && p2.type == type) {
-                                        auto idx2 = EgtbBoardCore::flip(p2.idx, flipMode);
+                                        auto idx2 = chessBoardCore::flip(p2.idx, flipMode);
 
-                                        int subKey = type != PieceType::pawn ? EgtbKey::getKey_xxx(idx0, idx1, idx2) : EgtbKey::getKey_ppp(idx0, idx1, idx2);
+                                        int subKey = type != PieceType::pawn ? chessKey::getKey_xxx(idx0, idx1, idx2) : chessKey::getKey_ppp(idx0, idx1, idx2);
                                         key += subKey * mul;
                                         break;
                                     }
@@ -598,32 +574,32 @@ void EgtbKey::getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idx
                 break;
             }
 
-            case EGTB_IDX_QQQQ:
-            case EGTB_IDX_RRRR:
-            case EGTB_IDX_BBBB:
-            case EGTB_IDX_HHHH:
-            case EGTB_IDX_PPPP:
+            case chess_IDX_QQQQ:
+            case chess_IDX_RRRR:
+            case chess_IDX_BBBB:
+            case chess_IDX_HHHH:
+            case chess_IDX_PPPP:
             {
-                PieceType type = static_cast<PieceType>(attr - EGTB_IDX_QQQQ + 1);
+                PieceType type = static_cast<PieceType>(attr - chess_IDX_QQQQ + 1);
 
                 for(int t = 1; t < 16; t++) {
                     auto p0 = board.pieceList[sd][t];
                     if (!p0.isEmpty() && p0.type == type) {
-                        auto idx0 = EgtbBoardCore::flip(p0.idx, flipMode);
+                        auto idx0 = chessBoardCore::flip(p0.idx, flipMode);
                         for(t++; t < 16; t++) {
                             auto p1 = board.pieceList[sd][t];
                             if (!p1.isEmpty() && p1.type == type) {
-                                auto idx1 = EgtbBoardCore::flip(p1.idx, flipMode);
+                                auto idx1 = chessBoardCore::flip(p1.idx, flipMode);
                                 for(t++; t < 16; t++) {
                                     auto p2 = board.pieceList[sd][t];
                                     if (!p2.isEmpty() && p2.type == type) {
-                                        auto idx2 = EgtbBoardCore::flip(p2.idx, flipMode);
+                                        auto idx2 = chessBoardCore::flip(p2.idx, flipMode);
                                         for(t++; t < 16; t++) {
                                             auto p3 = board.pieceList[sd][t];
                                             if (!p3.isEmpty() && p3.type == type) {
-                                                auto idx3 = EgtbBoardCore::flip(p3.idx, flipMode);
+                                                auto idx3 = chessBoardCore::flip(p3.idx, flipMode);
 
-                                                int subKey = type != PieceType::pawn ? EgtbKey::getKey_xxxx(idx0, idx1, idx2, idx3) : EgtbKey::getKey_pppp(idx0, idx1, idx2, idx3);
+                                                int subKey = type != PieceType::pawn ? chessKey::getKey_xxxx(idx0, idx1, idx2, idx3) : chessKey::getKey_pppp(idx0, idx1, idx2, idx3);
                                                 key += subKey * mul;
                                                 break;
                                             }

@@ -1,52 +1,28 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
-
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#ifndef EgtbKey_h
-#define EgtbKey_h
+#ifndef chessKey_h
+#define chessKey_h
 
 #include <map>
 
-#include "Egtb.h"
+#include "chess.h"
 
-namespace egtb {
+namespace chess {
 
-    class EgtbKeyRec {
+    class chessKeyRec {
     public:
         i64 key;
         bool flipSide;
     };
 
-    class EgtbKey {
+    class chessKey {
     public:
-        EgtbKey();
+        chessKey();
 
-        static void getKey(EgtbKeyRec& rec, const EgtbBoardCore& board, const int* idxArr, const i64* idxMult, u32 order);
+        static void getKey(chessKeyRec& rec, const chessBoardCore& board, const int* idxArr, const i64* idxMult, u32 order);
 
-        bool setupBoard_x(EgtbBoardCore& board, int key, PieceType type, Side side) const;
-        bool setupBoard_xx(EgtbBoardCore& board, int key, PieceType type, Side side) const;
-        bool setupBoard_xxx(EgtbBoardCore& board, int key, PieceType type, Side side) const;
-        bool setupBoard_xxxx(EgtbBoardCore& board, int key, PieceType type, Side side) const;
+        bool setupBoard_x(chessBoardCore& board, int key, PieceType type, Side side) const;
+        bool setupBoard_xx(chessBoardCore& board, int key, PieceType type, Side side) const;
+        bool setupBoard_xxx(chessBoardCore& board, int key, PieceType type, Side side) const;
+        bool setupBoard_xxxx(chessBoardCore& board, int key, PieceType type, Side side) const;
 
     private:
         static int getKey_x(int pos0);
@@ -68,9 +44,9 @@ namespace egtb {
 
     };
 
-    extern EgtbKey egtbKey;
+    extern chessKey chessKey;
 
-} // namespace egtb
+} // namespace chess
 
 #endif /* TbKey_hpp */
 

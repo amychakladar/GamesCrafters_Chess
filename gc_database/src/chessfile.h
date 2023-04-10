@@ -1,40 +1,16 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
-
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#ifndef EgtbFile_h
-#define EgtbFile_h
+#ifndef chessFile_h
+#define chessFile_h
 
 #include <assert.h>
 #include <fstream>
 #include <mutex>
 
-#include "Egtb.h"
+#include "chess.h"
 
 
-namespace egtb {
+namespace chess {
 
-    class EgtbFileHeader {
+    class chessFileHeader {
     public:
         //*********** HEADER DATA ***************
         u16         signature;
@@ -51,8 +27,8 @@ namespace egtb {
         //*********** END OF HEADER DATA **********
 
         void reset() {
-            memset(this, 0, EGTB_HEADER_SIZE);
-            signature = EGTB_ID_MAIN_V0;
+            memset(this, 0, chess_HEADER_SIZE);
+            signature = chess_ID_MAIN_V0;
         };
 
         bool isValid() const {
@@ -61,19 +37,19 @@ namespace egtb {
 
         int getVersion() const {
             switch (signature) {
-                case EGTB_ID_MAIN_V0:
+                case chess_ID_MAIN_V0:
                     return 0;
             }
             return -1;
         }
 
         bool saveFile(std::ofstream& outfile) const {
-            outfile.write ((char*)&signature, EGTB_HEADER_SIZE);
+            outfile.write ((char*)&signature, chess_HEADER_SIZE);
             return true;
         }
 
         bool readFile(std::ifstream& file) {
-            if (file.read((char*)&signature, EGTB_HEADER_SIZE)) {
+            if (file.read((char*)&signature, chess_HEADER_SIZE)) {
                 return true;
             }
             return false;
@@ -94,13 +70,13 @@ namespace egtb {
     };
 
     /*
-     * EGTB
+     * chess
      */
-    class EgtbKeyRec;
-    class EgtbFile
+    class chessKeyRec;
+    class chessFile
     {
     public:
-        EgtbFileHeader *header;
+        chessFileHeader *header;
 
         i64         size;
 
@@ -109,30 +85,30 @@ namespace egtb {
         u32*        compressBlockTables[2];
         char*       pCompressBuf;
 
-        EgtbLoadStatus  loadStatus;
+        chessLoadStatus  loadStatus;
 
     protected:
         std::string path[2];
 
         void            reset();
-        EgtbLoadMode    loadMode;
+        chessLoadMode    loadMode;
 
     public:
         i64         startpos[2], endpos[2];
 
         int         idxArr[8];
         i64         idxMult[32];
-        EgtbMemMode memMode;
+        chessMemMode memMode;
 
-        std::string egtbName;
+        std::string chessName;
 
         bool        enpassantable;
 
         std::mutex  mtx;
         std::mutex  sdmtx[2];
 
-        EgtbFile();
-        ~EgtbFile();
+        chessFile();
+        ~chessFile();
 
         static bool knownExtension(const std::string& path);
 
@@ -141,9 +117,9 @@ namespace egtb {
         i64     getSize() const { return size; }
 
         int getCompresseBlockCount() const {
-            return (int)((getSize() + EGTB_SIZE_COMPRESS_BLOCK - 1) / EGTB_SIZE_COMPRESS_BLOCK);
+            return (int)((getSize() + chess_SIZE_COMPRESS_BLOCK - 1) / chess_SIZE_COMPRESS_BLOCK);
         }
-        bool    isCompressed() const { return header->property & EGTB_PROP_COMPRESSED; }
+        bool    isCompressed() const { return header->property & chess_PROP_COMPRESSED; }
 
         int        getProperty() const { return header->property; }
         void    addProperty(int addprt) { header->property |= addprt; }
@@ -151,7 +127,7 @@ namespace egtb {
         void    setPath(const std::string& path, int sd);
         std::string getPath(int sd) const { return path[sd]; }
 
-        std::string getName() const { assert(header == nullptr || egtbName == header->name); return egtbName; }
+        std::string getName() const { assert(header == nullptr || chessName == header->name); return chessName; }
 
         i64     setupIdxComputing(const std::string& name, int order, int version);
         static i64 parseAttr(const std::string& name, int* idxArr, i64* idxMult, int* pieceCount, u16 order, int version);
@@ -169,8 +145,8 @@ namespace egtb {
         bool    createBuf(i64 len, int sd);
 
         i64     getBufItemCnt() const {
-            if (memMode == EgtbMemMode::tiny) {
-                return EGTB_SIZE_COMPRESS_BLOCK;
+            if (memMode == chessMemMode::tiny) {
+                return chess_SIZE_COMPRESS_BLOCK;
             }
             return getSize();
         }
@@ -187,28 +163,28 @@ namespace egtb {
         //        int    materialsignWB, materialsignBW;
 
     public:
-        virtual EgtbKeyRec getKey(const EgtbBoardCore& board) const;
+        virtual chessKeyRec getKey(const chessBoardCore& board) const;
 
         int     getScore(i64 idx, Side side, bool useLock = true);
-        int     getScore(const EgtbBoardCore& board, Side side, bool useLock = true);
+        int     getScore(const chessBoardCore& board, Side side, bool useLock = true);
 
         virtual void    checkToLoadHeaderAndTable();
 
-        bool    setupBoard(EgtbBoardCore& board, i64 idx, FlipMode flip, Side strongsider) const;
+        bool    setupBoard(chessBoardCore& board, i64 idx, FlipMode flip, Side strongsider) const;
 
     protected:
         int     getScoreNoLock(i64 idx, Side side);
-        int     getScoreNoLock(const EgtbBoardCore& board, Side side);
+        int     getScoreNoLock(const chessBoardCore& board, Side side);
 
     public:
-        bool    preload(const std::string& _path, EgtbMemMode mode, EgtbLoadMode loadMode);
+        bool    preload(const std::string& _path, chessMemMode mode, chessLoadMode loadMode);
         bool    loadHeaderAndTable(const std::string& path);
-        virtual void    merge(EgtbFile& otherEgtbFile);
+        virtual void    merge(chessFile& otherchessFile);
 
         int     cellToScore(char cell);
 
     protected:
-        char    getCell(const EgtbBoardCore& board, Side side);
+        char    getCell(const chessBoardCore& board, Side side);
         char    getCell(i64 idx, Side side);
 
         bool    loadAllData(std::ifstream& file, Side side);
@@ -221,7 +197,7 @@ namespace egtb {
 
     };
 
-} // namespace egtb
+} // namespace chess
 
-#endif /* EgtbFile_hpp */
+#endif /* chessFile_hpp */
 

@@ -1,30 +1,6 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
+#include "chessBoard.h"
 
- Copyright (c) 2018 Nguyen Hong Pham
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#include "EgtbBoard.h"
-
-namespace egtb {
+namespace chess {
     extern const char* pieceTypeName;
     extern const int exchangePieceValue[6];
     extern const char* startingFen;
@@ -36,13 +12,13 @@ namespace egtb {
     const char* startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - - -";
 }
 
-using namespace egtb;
+using namespace chess;
 
 
-EgtbBoardCore::EgtbBoardCore() {
+chessBoardCore::chessBoardCore() {
 }
 
-bool EgtbBoardCore::isValid() const {
+bool chessBoardCore::isValid() const {
     int pieceCout[2][6] = { {0,0,0,0,0,0}, {0,0,0,0,0,0} };
 
     for (int i = 0; i < 64; i++) {
@@ -106,7 +82,7 @@ bool EgtbBoardCore::isValid() const {
     return b;
 }
 
-void EgtbBoardCore::checkEnpassant() {
+void chessBoardCore::checkEnpassant() {
     if ((enpassant >= 16 && enpassant < 24) || (enpassant >= 40 && enpassant < 48))  {
         int d = 8, xsd = W, r = 3;
         if (enpassant >= 40) {
@@ -123,7 +99,7 @@ void EgtbBoardCore::checkEnpassant() {
     enpassant = -1;
 }
 
-bool EgtbBoardCore::isLegalEpCastle(int* ep, Side side) {
+bool chessBoardCore::isLegalEpCastle(int* ep, Side side) {
     bool r = true;
     int sd = static_cast<int>(side);
     enpassant = ep[sd];
@@ -216,11 +192,11 @@ bool EgtbBoardCore::isLegalEpCastle(int* ep, Side side) {
     return r;
 }
 
-void EgtbBoardCore::show() const {
+void chessBoardCore::show() const {
     std::cout << toString() << std::endl;
 }
 
-std::string EgtbBoardCore::toString() const {
+std::string chessBoardCore::toString() const {
 
     std::ostringstream stringStream;
 
@@ -242,7 +218,7 @@ std::string EgtbBoardCore::toString() const {
     return stringStream.str();
 }
 
-void EgtbBoardCore::setFen(const std::string& fen) {
+void chessBoardCore::setFen(const std::string& fen) {
     pieceList_reset((Piece *)pieceList);
     reset();
 
@@ -338,7 +314,7 @@ void EgtbBoardCore::setFen(const std::string& fen) {
     checkEnpassant();
 }
 
-std::string EgtbBoardCore::getFen(int halfCount, int fullMoveCount) const {
+std::string chessBoardCore::getFen(int halfCount, int fullMoveCount) const {
     std::ostringstream stringStream;
 
     int e = 0;
@@ -389,7 +365,7 @@ std::string EgtbBoardCore::getFen(int halfCount, int fullMoveCount) const {
     return stringStream.str();
 }
 
-void EgtbBoardCore::gen_addMove(MoveList& moveList, int from, int dest, bool captureOnly) const
+void chessBoardCore::gen_addMove(MoveList& moveList, int from, int dest, bool captureOnly) const
 {
     auto toSide = getPiece(dest).side;
     Piece movingPiece = getPiece(from);
@@ -400,7 +376,7 @@ void EgtbBoardCore::gen_addMove(MoveList& moveList, int from, int dest, bool cap
     }
 }
 
-void EgtbBoardCore::gen_addPawnMove(MoveList& moveList, int from, int dest, bool captureOnly) const
+void chessBoardCore::gen_addPawnMove(MoveList& moveList, int from, int dest, bool captureOnly) const
 {
     auto toSide = getPiece(dest).side;
     auto fromSide = getPiece(from).side;
@@ -417,7 +393,7 @@ void EgtbBoardCore::gen_addPawnMove(MoveList& moveList, int from, int dest, bool
     }
 }
 
-void EgtbBoardCore::clearCastleRights(int rookPos, Side rookSide) {
+void chessBoardCore::clearCastleRights(int rookPos, Side rookSide) {
     switch (rookPos) {
         case 0:
             if (rookSide == Side::black) {
@@ -443,7 +419,7 @@ void EgtbBoardCore::clearCastleRights(int rookPos, Side rookSide) {
 }
 
 
-int EgtbBoardCore::findKing(Side side) const
+int chessBoardCore::findKing(Side side) const
 {
     int sd = static_cast<int>(side);
     if (pieceList[sd][0].type == PieceType::king) {
@@ -459,7 +435,7 @@ int EgtbBoardCore::findKing(Side side) const
 }
 
 
-void EgtbBoardCore::genLegalOnly(MoveList& moveList, Side attackerSide, bool captureOnly) {
+void chessBoardCore::genLegalOnly(MoveList& moveList, Side attackerSide, bool captureOnly) {
     gen(moveList, attackerSide, captureOnly);
 
     Hist hist;
@@ -475,14 +451,14 @@ void EgtbBoardCore::genLegalOnly(MoveList& moveList, Side attackerSide, bool cap
     moveList.end = j;
 }
 
-bool EgtbBoardCore::isIncheck(Side beingAttackedSide) const {
+bool chessBoardCore::isIncheck(Side beingAttackedSide) const {
     int kingPos = findKing(beingAttackedSide);
     Side attackerSide = getXSide(beingAttackedSide);
     return beAttacked(kingPos, attackerSide);
 }
 
 
-void EgtbBoardCore::make(const Move& move, Hist& hist) {
+void chessBoardCore::make(const Move& move, Hist& hist) {
     auto movep = getPiece(move.from);
     auto cap = getPiece(move.dest);
 
@@ -561,7 +537,7 @@ void EgtbBoardCore::make(const Move& move, Hist& hist) {
     checkEnpassant();
 }
 
-void EgtbBoardCore::takeBack(const Hist& hist) {
+void chessBoardCore::takeBack(const Hist& hist) {
     auto movep = getPiece(hist.move.dest);
     setPiece(hist.move.from, movep);
 
@@ -596,13 +572,13 @@ void EgtbBoardCore::takeBack(const Hist& hist) {
 }
 
 
-void EgtbBoardCore::pieceList_reset(Piece *pieceList) {
+void chessBoardCore::pieceList_reset(Piece *pieceList) {
     for(int i = 0; i < 16; i++) {
         pieceList[i].type = pieceList[16 + i].type = PieceType::empty;
     }
 }
 
-bool EgtbBoardCore::pieceList_set(Piece *pieceList, int pos, PieceType type, Side side) {
+bool chessBoardCore::pieceList_set(Piece *pieceList, int pos, PieceType type, Side side) {
     int d = side == Side::white ? 16 : 0;
 
     if (type == PieceType::king) {
@@ -631,7 +607,7 @@ bool EgtbBoardCore::pieceList_set(Piece *pieceList, int pos, PieceType type, Sid
     return false;
 }
 
-bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, PieceType type, Side side) {
+bool chessBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, PieceType type, Side side) {
     int d = side == Side::white ? 16 : 0;
     if (type == PieceType::king) {
         pieceList[d].type = PieceType::empty;
@@ -647,7 +623,7 @@ bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, PieceType type
     return false;
 }
 
-bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos) {
+bool chessBoardCore::pieceList_setEmpty(Piece *pieceList, int pos) {
     for (int sd = 0; sd < 2; sd ++) {
         if (pieceList_setEmpty(pieceList, pos, sd)) {
             return true;
@@ -657,7 +633,7 @@ bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos) {
     return false;
 }
 
-bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, int sd) {
+bool chessBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, int sd) {
     int d = sd == 0 ? 0 : 16;
     for(int i = 0; i < 16; i++) {
         if (pieceList[i + d].idx == pos) {
@@ -668,7 +644,7 @@ bool EgtbBoardCore::pieceList_setEmpty(Piece *pieceList, int pos, int sd) {
     return false;
 }
 
-int EgtbBoardCore::pieceList_countStrong(const Piece *pieceList, Side side) {
+int chessBoardCore::pieceList_countStrong(const Piece *pieceList, Side side) {
     auto p = pieceList + (side == Side::white ? 16 : 0);
 
     int cnt = 0;
@@ -678,7 +654,7 @@ int EgtbBoardCore::pieceList_countStrong(const Piece *pieceList, Side side) {
     return cnt;
 }
 
-bool EgtbBoardCore::pieceList_isDraw(const Piece *pieceList) {
+bool chessBoardCore::pieceList_isDraw(const Piece *pieceList) {
     for(int i = 1; i < 16; i ++) {
         if (pieceList[i].type != PieceType::empty || pieceList[i + 16].type != PieceType::empty) {
             return false;
@@ -687,7 +663,7 @@ bool EgtbBoardCore::pieceList_isDraw(const Piece *pieceList) {
     return true;
 }
 
-bool EgtbBoardCore::pieceList_make(const Hist& hist) {
+bool chessBoardCore::pieceList_make(const Hist& hist) {
     if (!hist.cap.isEmpty()) {
         bool ok = false;
 
@@ -719,7 +695,7 @@ bool EgtbBoardCore::pieceList_make(const Hist& hist) {
     return false;
 }
 
-bool EgtbBoardCore::pieceList_takeback(const Hist& hist) {
+bool chessBoardCore::pieceList_takeback(const Hist& hist) {
     bool ok = false;
     for (int t = 0, sd = static_cast<int>(hist.move.side); t < 16; t++) {
         if (pieceList[sd][t].idx == hist.move.dest && pieceList[sd][t].type != PieceType::empty) {
@@ -754,7 +730,7 @@ bool EgtbBoardCore::pieceList_takeback(const Hist& hist) {
     return false;
 }
 
-void EgtbBoardCore::pieceList_createList(Piece *pieceList) const {
+void chessBoardCore::pieceList_createList(Piece *pieceList) const {
     pieceList_reset(pieceList);
 
     for(int pos = 0; pos < 90; pos++) {
@@ -766,7 +742,7 @@ void EgtbBoardCore::pieceList_createList(Piece *pieceList) const {
     }
 }
 
-bool EgtbBoardCore::pieceList_setupBoard(const Piece *thePieceList) {
+bool chessBoardCore::pieceList_setupBoard(const Piece *thePieceList) {
     reset();
 
     if (thePieceList) {
@@ -790,7 +766,7 @@ bool EgtbBoardCore::pieceList_setupBoard(const Piece *thePieceList) {
 }
 
 
-Side EgtbBoardCore::strongSide(const Piece *pieceList) {
+Side chessBoardCore::strongSide(const Piece *pieceList) {
     int mat[] = { 0, 0};
     for (int sd = 0, d = 0; sd < 2; sd++, d = 16) {
         for(int i = 1; i < 16; i++) {
@@ -872,7 +848,7 @@ static const int flip_hv[64] = { // a1-h8
     56,48,40,32,24,16, 8, 0
 };
 
-int EgtbBoardCore::flip(int pos, FlipMode flipMode) {
+int chessBoardCore::flip(int pos, FlipMode flipMode) {
     switch (flipMode) {
         case FlipMode::none: return pos;
         case FlipMode::horizontal: return flip_h[pos];
@@ -890,7 +866,7 @@ int EgtbBoardCore::flip(int pos, FlipMode flipMode) {
     return 0;
 }
 
-void EgtbBoardCore::flip(FlipMode flipMode) {
+void chessBoardCore::flip(FlipMode flipMode) {
     Piece bkPieceList[2][16];
     memcpy(bkPieceList, pieceList, sizeof(bkPieceList));
 
@@ -918,7 +894,7 @@ static const FlipMode flipflip_r90[] = { FlipMode::rotate90, FlipMode::flipHV, F
 static const FlipMode flipflip_r180[] = { FlipMode::rotate180, FlipMode::vertical, FlipMode::horizontal, FlipMode::flipHV, FlipMode::flipVH, FlipMode::rotate270, FlipMode::none, FlipMode::rotate90 };
 static const FlipMode flipflip_r270[] = { FlipMode::rotate270, FlipMode::flipVH, FlipMode::flipHV, FlipMode::vertical, FlipMode::horizontal, FlipMode::none, FlipMode::rotate90, FlipMode::rotate180 };
 
-FlipMode EgtbBoardCore::flip(FlipMode oMode, FlipMode flipMode) {
+FlipMode chessBoardCore::flip(FlipMode oMode, FlipMode flipMode) {
     switch (flipMode) {
         case FlipMode::none:
             break;
@@ -950,7 +926,7 @@ FlipMode EgtbBoardCore::flip(FlipMode oMode, FlipMode flipMode) {
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-void EgtbBoard::gen(MoveList& moves, Side side, bool captureOnly) const {
+void chessBoard::gen(MoveList& moves, Side side, bool captureOnly) const {
     assert(isValid());
     for (int pos = 0; pos < 64; ++pos) {
         auto piece = pieces[pos];
@@ -1166,7 +1142,7 @@ void EgtbBoard::gen(MoveList& moves, Side side, bool captureOnly) const {
 }
 
 
-bool EgtbBoard::beAttacked(int pos, Side attackerSide) const
+bool chessBoard::beAttacked(int pos, Side attackerSide) const
 {
     int row = ROW(pos), col = COL(pos);
     /* Check attacking of Knight */
@@ -1306,7 +1282,7 @@ bool EgtbBoard::beAttacked(int pos, Side attackerSide) const
 }
 
 
-void EgtbBoard::make(const Move& move, Hist& hist) {
+void chessBoard::make(const Move& move, Hist& hist) {
     hist.enpassant = enpassant;
     hist.status = _status;
     hist.castleRights[0] = castleRights[0];
@@ -1374,7 +1350,7 @@ void EgtbBoard::make(const Move& move, Hist& hist) {
     assert(b);
 }
 
-void EgtbBoard::takeBack(const Hist& hist) {
+void chessBoard::takeBack(const Hist& hist) {
     pieces[hist.move.from] = pieces[hist.move.dest];
 
     int capPos = hist.move.dest;
@@ -1407,7 +1383,7 @@ void EgtbBoard::takeBack(const Hist& hist) {
     assert(isValid());
 }
 
-bool EgtbBoard::setup(const std::vector<Piece> pieceVec, Side _side, Squares _enpassant) {
+bool chessBoard::setup(const std::vector<Piece> pieceVec, Side _side, Squares _enpassant) {
     pieceList_reset((Piece *)pieceList);
     reset();
 

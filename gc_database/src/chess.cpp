@@ -1,4 +1,4 @@
-#include "Egtb.h"
+#include "chess.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -13,9 +13,9 @@
 #include "lzma/7zTypes.h"
 #include "lzma/LzmaDec.h"
 
-namespace egtb {
+namespace chess {
 
-bool egtbVerbose = false;
+bool chessVerbose = false;
 
 void toLower(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -48,7 +48,7 @@ std::string getFileName(const std::string& path) {
 
 std::string getVersion() {
     char buf[10];
-    std::snprintf(buf, sizeof(buf), "%d.%02d", EGTB_VERSION >> 8, EGTB_VERSION & 0xff);
+    std::snprintf(buf, sizeof(buf), "%d.%02d", CHESS_VERSION >> 8, CHESS_VERSION & 0xff);
     return buf;
 }
 
@@ -122,8 +122,8 @@ std::vector<std::string> listdir(const std::string& dirname) {
         auto p = dest;
 
         for(int i = 0; i < blocknum; i++) {
-            int blocksz = (blocktable[i] & ~EGTB_UNCOMPRESS_BIT) - (i == 0 ? 0 : (blocktable[i - 1] & ~EGTB_UNCOMPRESS_BIT));
-            int uncompressed = blocktable[i] & EGTB_UNCOMPRESS_BIT;
+            int blocksz = (blocktable[i] & ~chess_UNCOMPRESS_BIT) - (i == 0 ? 0 : (blocktable[i - 1] & ~chess_UNCOMPRESS_BIT));
+            int uncompressed = blocktable[i] & chess_UNCOMPRESS_BIT;
 
             if (uncompressed) {
                 memcpy(p, s, blocksz);

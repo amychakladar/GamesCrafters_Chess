@@ -1,33 +1,9 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
+#ifndef chessBoard_h
+#define chessBoard_h
 
- Copyright (c) 2018 Nguyen Hong Pham
+#include "chess.h"
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#ifndef EgtbBoard_h
-#define EgtbBoard_h
-
-#include "Egtb.h"
-
-namespace egtb {
+namespace chess {
 
     extern const char* startingFen;
     extern const char* pieceTypeName;
@@ -212,7 +188,7 @@ namespace egtb {
     };
 
 
-    class EgtbBoardCore {
+    class chessBoardCore {
     public:
         Piece pieceList[2][16];
         Side side;
@@ -223,7 +199,7 @@ namespace egtb {
 
     public:
 
-        virtual void copy(const EgtbBoardCore& fromBoard) {
+        virtual void copy(const chessBoardCore& fromBoard) {
             enpassant = fromBoard.enpassant;
             _status = fromBoard._status;
             castleRights[0] = fromBoard.castleRights[0];
@@ -271,7 +247,7 @@ namespace egtb {
         virtual void clearCastleRights(int rookPos, Side rookSide);
 
     public:
-        EgtbBoardCore();
+        chessBoardCore();
 
         std::string toString() const;
         bool isValid() const;
@@ -303,7 +279,7 @@ namespace egtb {
 
 
     ///////////////////////////////////////////////////
-    class EgtbBoard : public EgtbBoardCore {
+    class chessBoard : public chessBoardCore {
     protected:
         Piece pieces[64];
 
@@ -349,7 +325,7 @@ namespace egtb {
     };
 
 
-} // namespace egtb
+} // namespace chess
 
-#endif /* EgtbBoard_h */
+#endif /* chessBoard_h */
 

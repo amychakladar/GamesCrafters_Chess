@@ -1,149 +1,125 @@
-/*
- This file is part of NhatMinh Egtb, distributed under MIT license.
+#include "chess.h"
+#include "chessDb.h"
+#include "chessKey.h"
 
- Copyright (c) 2018 Nguyen Hong Pham
+using namespace chess;
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-
-#include "Egtb.h"
-#include "EgtbDb.h"
-#include "EgtbKey.h"
-
-using namespace egtb;
-
-EgtbDb::EgtbDb() {
+chessDb::chessDb() {
 }
 
-EgtbDb::~EgtbDb() {
+chessDb::~chessDb() {
     closeAll();
 }
 
-void EgtbDb::closeAll() {
-    for (auto && egtbFile : egtbFileVec) {
-        delete egtbFile;
+void chessDb::closeAll() {
+    for (auto && chessFile : chessFileVec) {
+        delete chessFile;
     }
     folders.clear();
-    egtbFileVec.clear();
+    chessFileVec.clear();
     nameMap.clear();
 }
 
-void EgtbDb::removeAllBuffers() {
-    for (auto && egtbFile : egtbFileVec) {
-        egtbFile->removeBuffers();
+void chessDb::removeAllBuffers() {
+    for (auto && chessFile : chessFileVec) {
+        chessFile->removeBuffers();
     }
 }
 
-void EgtbDb::setFolders(const std::vector<std::string>& folders_) {
+void chessDb::setFolders(const std::vector<std::string>& folders_) {
     folders.clear();
     folders.insert(folders_.end(), folders_.begin(), folders_.end());
 }
 
-void EgtbDb::addFolders(const std::string& folderName) {
+void chessDb::addFolders(const std::string& folderName) {
     folders.push_back(folderName);
 }
 
-EgtbFile* EgtbDb::getEgtbFile(const std::string& name) {
+chessFile* chessDb::getchessFile(const std::string& name) {
     return nameMap[name];
 }
 
-void EgtbDb::preload(const std::string& folder, EgtbMemMode egtbMemMode, EgtbLoadMode loadMode) {
+void chessDb::preload(const std::string& folder, chessMemMode chessMemMode, chessLoadMode loadMode) {
     addFolders(folder);
-    preload(egtbMemMode, loadMode);
+    preload(chessMemMode, loadMode);
 }
 
-void EgtbDb::preload(EgtbMemMode egtbMemMode, EgtbLoadMode loadMode) {
+void chessDb::preload(chessMemMode chessMemMode, chessLoadMode loadMode) {
     for (auto && folderName : folders) {
         auto vec = listdir(folderName);
 
         for (auto && path : vec) {
-            if (EgtbFile::knownExtension(path)) {
-                EgtbFile *egtbFile = new EgtbFile();
-                if (egtbFile->preload(path, egtbMemMode, loadMode)) {
-                    auto pos = nameMap.find(egtbFile->getName());
+            if (chessFile::knownExtension(path)) {
+                chessFile *chessFile = new chessFile();
+                if (chessFile->preload(path, chessMemMode, loadMode)) {
+                    auto pos = nameMap.find(chessFile->getName());
                     if (pos == nameMap.end()) {
-                        addEgtbFile(egtbFile);
+                        addchessFile(chessFile);
                         continue;
                     }
-                    pos->second->merge(*egtbFile);
+                    pos->second->merge(*chessFile);
                 } else {
                     std::cout << "Error: not loaded: " << path << std::endl;
                 }
-                free(egtbFile);
+                free(chessFile);
             }
         }
     }
 }
 
-void EgtbDb::addEgtbFile(EgtbFile *egtbFile) {
-    egtbFileVec.push_back(egtbFile);
+void chessDb::addchessFile(chessFile *chessFile) {
+    chessFileVec.push_back(chessFile);
 
-    auto s = egtbFile->getName();
-    nameMap[s] = egtbFile;
+    auto s = chessFile->getName();
+    nameMap[s] = chessFile;
     auto p = s.find_last_of("k");
     auto s0 = s.substr(0, p);
     auto s1 = s.substr(p);
     s = s1 + s0;
-    nameMap[s] = egtbFile;
+    nameMap[s] = chessFile;
 }
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-int EgtbDb::getScore(const std::vector<Piece> pieceVec, Side side) {
-    EgtbBoard board;
+int chessDb::getScore(const std::vector<Piece> pieceVec, Side side) {
+    chessBoard board;
     board.setup(pieceVec, side);
     return getScore(board, board.side);
 }
 
-int EgtbDb::getScore(EgtbBoardCore& board) {
+int chessDb::getScore(chessBoardCore& board) {
     return getScore(board, board.side);
 }
 
-int EgtbDb::getScore(EgtbBoardCore& board, Side side) {
+int chessDb::getScore(chessBoardCore& board, Side side) {
     assert(side == Side::white || side == Side::black);
 
-    EgtbFile* pEgtbFile = getEgtbFile(board);
-    if (pEgtbFile == nullptr || pEgtbFile->loadStatus == EgtbLoadStatus::error) {
-        return EGTB_SCORE_MISSING;
+    chessFile* pchessFile = getchessFile(board);
+    if (pchessFile == nullptr || pchessFile->loadStatus == chessLoadStatus::error) {
+        return chess_SCORE_MISSING;
     }
 
-    pEgtbFile->checkToLoadHeaderAndTable();
-    auto r = pEgtbFile->getKey(board);
+    pchessFile->checkToLoadHeaderAndTable();
+    auto r = pchessFile->getKey(board);
     auto querySide = r.flipSide ? getXSide(side) : side;
 
-    if (pEgtbFile->header->isSide(querySide) && board.enpassant <= 0) {
-        int score = pEgtbFile->getScore(r.key, querySide);
+    if (pchessFile->header->isSide(querySide) && board.enpassant <= 0) {
+        int score = pchessFile->getScore(r.key, querySide);
         return score;
     }
 
     return getScoreOnePly(board, side);
 }
 
-int EgtbDb::getScoreOnePly(EgtbBoardCore& board, Side side) {
+int chessDb::getScoreOnePly(chessBoardCore& board, Side side) {
 
     auto xside = getXSide(side);
 
     MoveList moveList;
     Hist hist;
     board.gen(moveList, side, false);
-    int bestscore = -EGTB_SCORE_MATE, legalCnt = 0;
+    int bestscore = -chess_SCORE_MATE, legalCnt = 0;
 
     for(int i = 0; i < moveList.end; i++) {
         auto move = moveList.list[i];
@@ -153,11 +129,11 @@ int EgtbDb::getScoreOnePly(EgtbBoardCore& board, Side side) {
             legalCnt++;
             auto score = getScore(board, xside);
 
-            if (score == EGTB_SCORE_MISSING && !hist.cap.isEmpty() && board.pieceList_isDraw()) {
-                score = EGTB_SCORE_DRAW;
+            if (score == chess_SCORE_MISSING && !hist.cap.isEmpty() && board.pieceList_isDraw()) {
+                score = chess_SCORE_DRAW;
             }
 
-            if (abs(score) <= EGTB_SCORE_MATE) {
+            if (abs(score) <= chess_SCORE_MATE) {
                 bestscore = MAX(bestscore, -score);
             }
         }
@@ -165,36 +141,36 @@ int EgtbDb::getScoreOnePly(EgtbBoardCore& board, Side side) {
     }
 
     if (legalCnt) {
-        if (abs(bestscore) <= EGTB_SCORE_MATE && bestscore != EGTB_SCORE_DRAW) {
+        if (abs(bestscore) <= chess_SCORE_MATE && bestscore != chess_SCORE_DRAW) {
             bestscore += bestscore > 0 ? -1 : +1;
         }
         return bestscore;
     }
 
-    return board.isIncheck(side) ? -EGTB_SCORE_MATE : EGTB_SCORE_DRAW;
+    return board.isIncheck(side) ? -chess_SCORE_MATE : chess_SCORE_DRAW;
 }
 
-EgtbFile* EgtbDb::getEgtbFile(const EgtbBoardCore& board) const {
-    auto name = EgtbFile::pieceListToName((const Piece* )board.pieceList);
+chessFile* chessDb::getchessFile(const chessBoardCore& board) const {
+    auto name = chessFile::pieceListToName((const Piece* )board.pieceList);
     return nameMap.find(name) != nameMap.end() ? nameMap.at(name) : nullptr;
 }
 
-int EgtbDb::probe(const std::vector<Piece> pieceVec, Side side, MoveList& moveList) {
-    EgtbBoard board;
+int chessDb::probe(const std::vector<Piece> pieceVec, Side side, MoveList& moveList) {
+    chessBoard board;
     board.setup(pieceVec, side);
     return probe(board, moveList);
 }
 
-int EgtbDb::probe(const char* fenString, MoveList& moveList) {
-    EgtbBoard board;
+int chessDb::probe(const char* fenString, MoveList& moveList) {
+    chessBoard board;
     board.setFen(fenString);
     return probe(board, moveList);
 }
 
-int EgtbDb::probe(EgtbBoardCore& board, MoveList& moveList) {
+int chessDb::probe(chessBoardCore& board, MoveList& moveList) {
     auto side = board.side;
     auto xside = getXSide(board.side);
-    int bestScore = -EGTB_SCORE_MATE, legalMoveCnt = 0;
+    int bestScore = -chess_SCORE_MATE, legalMoveCnt = 0;
     bool cont = true;
     Move bestMove(Side::none, -1, -1);
 
@@ -211,18 +187,18 @@ int EgtbDb::probe(EgtbBoardCore& board, MoveList& moveList) {
 
             int score = getScore(board);
 
-            if (score == EGTB_SCORE_MISSING) {
+            if (score == chess_SCORE_MISSING) {
                 if (!hist.cap.isEmpty() && board.pieceList_isDraw()) {
-                    score = EGTB_SCORE_DRAW;
+                    score = chess_SCORE_DRAW;
                 } else {
-                    if (egtbVerbose) {
+                    if (chessVerbose) {
                         std::cerr << "Error: missing or broken data when probing:" << std::endl;
                         board.show();
                     }
-                    return EGTB_SCORE_MISSING;
+                    return chess_SCORE_MISSING;
                 }
             }
-            if (score <= EGTB_SCORE_MATE) {
+            if (score <= chess_SCORE_MATE) {
                 legalMoveCnt++;
                 score = -score;
 
@@ -230,7 +206,7 @@ int EgtbDb::probe(EgtbBoardCore& board, MoveList& moveList) {
                     bestMove = move;
                     bestScore = score;
 
-                    if (score == EGTB_SCORE_MATE) {
+                    if (score == chess_SCORE_MATE) {
                         cont = false;
                     }
                 }
@@ -242,17 +218,17 @@ int EgtbDb::probe(EgtbBoardCore& board, MoveList& moveList) {
     }
 
     if (!legalMoveCnt) {
-        return board.isIncheck(side) ? -EGTB_SCORE_MATE : EGTB_SCORE_DRAW;
+        return board.isIncheck(side) ? -chess_SCORE_MATE : chess_SCORE_DRAW;
     }
 
-    if (bestScore != EGTB_SCORE_DRAW && bestScore < abs(EGTB_SCORE_MATE)) {
+    if (bestScore != chess_SCORE_DRAW && bestScore < abs(chess_SCORE_MATE)) {
         bestScore += bestScore > 0 ? -1 : 1;
     }
 
     if (bestMove.isValid()) {
         moveList.add(bestMove);
 
-        if (abs(bestScore) != EGTB_SCORE_MATE && bestScore != EGTB_SCORE_DRAW) {
+        if (abs(bestScore) != chess_SCORE_MATE && bestScore != chess_SCORE_DRAW) {
             Hist hist;
             board.make(bestMove, hist);
             auto side = board.side;
