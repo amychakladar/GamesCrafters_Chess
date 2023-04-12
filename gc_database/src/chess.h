@@ -181,7 +181,7 @@ namespace chess {
     std::string posToCoordinateString(int pos);
     std::string getFileName(const std::string& path);
     std::string getVersion();
-    std::vector<std::string> listdir(std::string dirname);
+    std::vector<std::string> listdir2(std::string dirname);
 
     int decompress(char *dst, int uncompresslen, const char *src, int slen);
     i64 decompressAllBlocks(int blocksize, int blocknum, u32* blocktable, char *dest, i64 uncompressedlen, const char *src, i64 slen);

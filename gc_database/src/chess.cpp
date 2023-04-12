@@ -3,10 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
-#include <cstring>
 #include <iostream>
-#include <array>
-#include <cstdlib>
 #include <filesystem>
 
 // for compression
@@ -21,8 +18,8 @@ void toLower(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
 }
 
-void toLower(char* str) {
-    std::transform(str, str + std::strlen(str), str, [](unsigned char c) { return std::tolower(c); });
+void toLower(const char* str) {
+    std::transform(str, str + std::strlen(str), const_cast<char*>(str), [](unsigned char c) { return std::tolower(c); });
 }
 
 std::string posToCoordinateString(int pos) {
@@ -33,17 +30,13 @@ std::string posToCoordinateString(int pos) {
 }
 
 std::string getFileName(const std::string& path) {
-    #ifdef _WIN32
-        auto pos = path.find_last_of("/\\");
-    #else
-        auto pos = path.find_last_of('/');
-    #endif
-        std::string str = pos != std::string::npos ? path.substr(pos + 1) : path;
-        pos = str.find_last_of(".");
-        if (pos != std::string::npos) {
-        str = str.substr(0, pos);
-        }
-        return str;
+    const auto pos = path.find_last_of('/');
+    std::string str = (pos != std::string::npos) ? path.substr(pos + 1) : path;
+    const auto dotPos = str.find_last_of(".");
+    if (dotPos != std::string::npos) {
+        str = str.substr(0, dotPos);
+    }
+    return str;
 }
 
 std::string getVersion() {
@@ -53,17 +46,16 @@ std::string getVersion() {
 }
 
 #ifdef _WIN32
-    static void findFiles(std::vector<std::string>& names, const std::string& dirname) {
-        std::string search_path = dirname + "/*.*";
-
-        WIN32_FIND_DATAA file;
-        HANDLE search_handle = FindFirstFileA(search_path.c_str(), &file);
-        if (search_handle != INVALID_HANDLE_VALUE) {
-            do {
-                std::string fullpath = dirname + "/" + file.cFileName;
-                if ((file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (file.cFileName[0] != '.')) {
-                    findFiles(names, fullpath);
-                } else {
+static void findFiles(std::vector<std::string>& names, const std::string& dirname) {
+    const std::string search_path = dirname + "/*.*";
+    WIN32_FIND_DATAA file;
+    const HANDLE search_handle = FindFirstFileA(search_path.c_str(), &file);
+    if (search_handle != INVALID_HANDLE_VALUE) {
+        do {
+            const std::string fullpath = dirname + "/" + file.cFileName;
+            if ((file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (file.cFileName[0] != '.')) {
+                findFiles(names, fullpath);
+            } else {
                 names.push_back(fullpath);
             }
         } while (FindNextFileA(search_handle, &file));
@@ -79,29 +71,33 @@ std::vector<std::string> listdir(const std::string& dirname) {
 
 #else
 
-    std::vector<std::string> listdir(const std::string& dirname) {
+std::vector<std::string> listdir(const std::string& dirname) {
     std::vector<std::string> vec;
-
     for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
         if (entry.is_directory()) {
-            auto vec2 = listdir(entry.path().string());
+            const auto vec2 = listdir(entry.path().string());
             vec.insert(vec.end(), vec2.begin(), vec2.end());
         } else {
             vec.push_back(entry.path().string());
         }
     }
-
     return vec;
 }
 
+
 #endif
 
+static void* _allocForLzma(ISzAllocPtr, size_t size) {
+    return malloc(size);
+}
 
-    static void * _allocForLzma(ISzAllocPtr, size_t size) { return malloc(size); }
-    static void _freeForLzma(ISzAllocPtr, void *addr) { free(addr); }
-    static ISzAlloc _szAllocForLzma = { _allocForLzma, _freeForLzma };
+static void _freeForLzma(ISzAllocPtr, void* addr) {
+    free(addr);
+}
 
-    static const Byte lzmaPropData[5] = { 93, 0, 0, 0, 1 };
+static ISzAlloc _szAllocForLzma = { _allocForLzma, _freeForLzma };
+
+static const Byte lzmaPropData[5] = { 93, 0, 0, 0, 1 };
 
     int decompress(char *dst, int uncompresslen, const char *src, int slen) {
         SizeT srcLen = slen, dstLen = uncompresslen;
